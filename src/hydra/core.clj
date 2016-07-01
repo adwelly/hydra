@@ -1,10 +1,10 @@
 (ns hydra.core)
 
 (defn to-path-map
-      ([mp] (to-path-map "" mp))
-      ([path mp]
-        (into {} (for [[k v] mp :let [new-path (str path "/" k)]]
-                      (if (map? v)
-                        (to-path-map new-path v)
-                        [new-path v])))))
-
+  ([coll] (to-path-map "" coll))
+  ([path coll]
+   (if (map? coll)
+     (into {} (for [[k v] coll] (to-path-map (str path "/" k) v)))
+     (if (vector? coll)
+       (into {} (for [i (range (count coll))] (to-path-map (str path "/" i) (nth coll i))))
+       [path coll]))))
