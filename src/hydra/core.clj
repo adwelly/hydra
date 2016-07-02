@@ -9,25 +9,25 @@
          (vector? coll) (reduce union #{} (for [i (range (count coll))] (to-path-set (str path "/" i) (nth coll i))))
          :else #{(str path "/" coll)})))
 
-(defn str->int [s]
+(defn- str->int [s]
   (Integer. s))
 
-(defn numeric? [s]
+(defn- numeric? [s]
   (re-matches #"\d+" s))
 
-(defn every-key-numeric? [m]
+(defn- every-key-numeric? [m]
   (every? numeric? (keys m)))
 
-(defn add-paths [mp [hd & tail :as path]]
+(defn- add-paths [mp [hd & tail :as path]]
   (if (= 2 (count path))
     (assoc mp hd (let [val (second path)] (if (numeric? val) (str->int val) val)))
     (assoc mp hd (add-paths (get mp hd {}) tail))))
 
-(defn from-path-set-to-map-of-maps [ps]
+(defn- from-path-set-to-map-of-maps [ps]
   (let [paths (mapv #(-> % (split #"/") rest) ps)]
     (reduce add-paths {} paths)))
 
-(defn vectorize [m-of-m]
+(defn- vectorize [m-of-m]
   (let [sub-maps (into {} (for [[k v] m-of-m] [k (if (map? v) (vectorize v) v)]))]
     (if (every-key-numeric? sub-maps)
       (map second (sort-by first (into [] sub-maps)))

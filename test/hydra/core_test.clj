@@ -1,6 +1,9 @@
 (ns hydra.core-test
   (:require [midje.sweet :refer :all]
+            [midje.util :refer [testable-privates]]
             [hydra.core :refer :all]))
+
+(testable-privates hydra.core from-path-set-to-map-of-maps vectorize)
 
 (def simple-map
   {"a" 1 "b" 2 "c" 3})
