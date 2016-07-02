@@ -1,10 +1,9 @@
-(ns hydra.core)
+(ns hydra.core
+  (:require [clojure.set :refer [union]]))
 
-(defn to-path-map
-  ([coll] (to-path-map "" coll))
+(defn to-path-set
+  ([coll] (to-path-set "" coll))
   ([path coll]
-   (if (map? coll)
-     (into {} (for [[k v] coll] (to-path-map (str path "/" k) v)))
-     (if (vector? coll)
-       (into {} (for [i (range (count coll))] (to-path-map (str path "/" i) (nth coll i))))
-       [path coll]))))
+   (cond (map? coll)    (reduce union #{} (for [[k v] coll] (to-path-set (str path "/" k) v)))
+         (vector? coll) (reduce union #{} (for [i (range (count coll))] (to-path-set (str path "/" i) (nth coll i))))
+         :else #{(str path "/" coll)})))
