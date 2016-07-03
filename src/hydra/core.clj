@@ -9,9 +9,6 @@
          (vector? coll) (reduce union #{} (for [i (range (count coll))] (to-path-set (conj path i) (nth coll i))))
          :else #{(conj path coll)})))
 
-(defn- every-key-number? [m]
-  (every? number? (keys m)))
-
 (defn- add-paths [mp [hd & tail :as path]]
   (if (= 2 (count path))
     (assoc mp hd (second path))
@@ -22,7 +19,7 @@
 
 (defn- vectorize [m-of-m]
   (let [sub-maps (into {} (for [[k v] m-of-m] [k (if (map? v) (vectorize v) v)]))]
-    (if (every-key-number? sub-maps)
+    (if (->> sub-maps keys (every? number?))
       (map second (sort-by first (into [] sub-maps)))
       sub-maps)))
 
