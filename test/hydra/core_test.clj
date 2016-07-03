@@ -34,9 +34,9 @@
    2 "c"})
 
 (def map-with-numeric-keys-representing-vector
-  {"a"   {0 "b"
-          1 "c"
-          2 "d"}
+  {"a" {0 "b"
+        1 "c"
+        2 "d"}
    "e" 2})
 
 (def deeply-nested-map-with-vectors
@@ -60,7 +60,7 @@
       (to-path-set deeply-nested-map) => #{["a" "b" 1] ["c" 2] ["d" "e" 3] ["d" "f" "g" 4] ["d" "f" "h" 5]})
 
 (fact "You can mix maps and vectors"
-      (to-path-set simple-map-with-vector) => #{["a" 0 "b"] ["a" 1 "d"] ["a" 2 "e"]  ["f" 2]})
+      (to-path-set simple-map-with-vector) => #{["a" 0 "b"] ["a" 1 "d"] ["a" 2 "e"] ["f" 2]})
 
 (fact "vectors can be the outermost structure"
       (to-path-set vector-with-map) => #{[0 "a" 1] [1 "b" 2] [2 "c" 3]})
@@ -86,10 +86,22 @@
       (vectorize map-with-numeric-keys-representing-vector) => {"a" ["b" "c" "d"] "e" 2})
 
 (fact "you can convert a path set into map of maps and vecs"
-      (from-path-set #{["a" 0 "b"] ["a" 1 "d"] ["a" 2 "e"]  ["f" 2]}) => simple-map-with-vector)
+      (from-path-set #{["a" 0 "b"] ["a" 1 "d"] ["a" 2 "e"] ["f" 2]}) => simple-map-with-vector)
 
 (fact "you can make a round trip from maps to path sets and back"
       (-> deeply-nested-map-with-vectors to-path-set from-path-set) => deeply-nested-map-with-vectors)
+
+(defn path-longer-than? [len path]
+  (> (count path) len))
+
+(fact "You can cleave a set of paths in two with a predicate"
+      (-> (cleave (partial path-longer-than? 3) (to-path-set deeply-nested-map-with-vectors)) first) =>
+      #{["d" "f" "h" 2 "m"] ["d" "f" "h" 1 5] ["d" "f" "g" 4] ["d" "f" "h" 0 "l"]}
+      (-> (cleave (partial path-longer-than? 3) (to-path-set deeply-nested-map-with-vectors)) second) =>
+      #{["a" "b" 1] ["c" 2 "k"] ["c" 0 "i"] ["d" "e" 3] ["c" 1 "j"]})
+
+(fact "Splicing is the inverse of cleaving"
+      (->> deeply-nested-map-with-vectors to-path-set (cleave (partial path-longer-than? 3)) splice from-path-set) => deeply-nested-map-with-vectors)
 
 
 

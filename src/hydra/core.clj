@@ -25,3 +25,15 @@
 
 (defn from-path-set [ps]
   (-> ps from-path-set-to-map-of-maps vectorize))
+
+(defn cleave [pred ps]
+  (loop [results '(()()) paths (seq ps)]
+    (if (not paths)
+      (list (set (first results)) (set (second results)))
+      (let [p (first paths)
+            passes (first results)
+            fails (second results)]
+            (recur (if (pred p) (list (conj passes p) fails) (list passes (conj fails p))) (next paths))))))
+
+(defn splice [path-sets]
+  (reduce union path-sets))
