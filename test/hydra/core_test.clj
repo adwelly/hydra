@@ -44,7 +44,7 @@
    "c" ["i" "j" "k"]
    "d" {"e" 3
         "f" {"g" 4
-             "h" ["l" 5 "m"]}}})
+             "h" [5 6 7]}}})
 
 
 (fact "simple map path-set test"
@@ -96,7 +96,7 @@
 
 (fact "You can cleave a set of paths in two with a predicate"
       (-> (cleave (partial path-longer-than? 3) (to-path-set deeply-nested-map-with-vectors)) first) =>
-      #{["d" "f" "h" 2 "m"] ["d" "f" "h" 1 5] ["d" "f" "g" 4] ["d" "f" "h" 0 "l"]}
+      #{["d" "f" "h" 2 7] ["d" "f" "h" 1 6] ["d" "f" "g" 4] ["d" "f" "h" 0 5]}
       (-> (cleave (partial path-longer-than? 3) (to-path-set deeply-nested-map-with-vectors)) second) =>
       #{["a" "b" 1] ["c" 2 "k"] ["c" 0 "i"] ["d" "e" 3] ["c" 1 "j"]})
 
@@ -109,7 +109,7 @@
        "c" ["i" "j" "k"]
        "d" {"e" 3
             "f" {"g" 4
-                 "h" ["l" 5 "m"]}}})
+                 "h" [5 6 7]}}})
 
 
 

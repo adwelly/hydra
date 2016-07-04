@@ -20,7 +20,7 @@
 (defn- vectorize [m-of-m]
   (let [sub-maps (into {} (for [[k v] m-of-m] [k (if (map? v) (vectorize v) v)]))]
     (if (->> sub-maps keys (every? number?))
-      (map second (sort-by first (into [] sub-maps)))
+      (mapv second (sort-by first (into [] sub-maps)))
       sub-maps)))
 
 (defn from-path-set [ps]
@@ -46,5 +46,7 @@
 
 (defn reset-leaf [ps route val]
   (let [[passed failed] (cleave #(starts-with? route %) ps)]
-    (splice [(set (map #(change-leaf % val) passed)) failed])))
+    (splice [(set (mapv #(change-leaf % val) passed)) failed])))
+
+(def reset-leaves reset-leaf) ;; Synonym
 
