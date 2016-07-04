@@ -41,12 +41,19 @@
 (defn starts-with? [route path]
   (every? identity (for [i (range (count route))] (= (nth route i) (nth path i)))))
 
-(defn change-leaf [p val]
-  (conj (vec (butlast p)) val))
+(defn apply-leaf [p f]
+  (conj (vec (butlast p)) (f (last p))))
+
+(defn transform-leaf [ps route f]
+  (let [[passed failed] (cleave #(starts-with? route %) ps)]
+    (splice [(set (mapv #(apply-leaf % f) passed)) failed])))
+
+(defn transform-leaves transform-leaf) ;; Synonym
 
 (defn reset-leaf [ps route val]
-  (let [[passed failed] (cleave #(starts-with? route %) ps)]
-    (splice [(set (mapv #(change-leaf % val) passed)) failed])))
+  (transform-leaf ps route (constantly val)))
 
 (def reset-leaves reset-leaf) ;; Synonym
+
+
 

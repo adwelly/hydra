@@ -103,13 +103,21 @@
 (fact "Splicing is the inverse of cleaving"
       (->> deeply-nested-map-with-vectors to-path-set (cleave (partial path-longer-than? 3)) splice from-path-set) => deeply-nested-map-with-vectors)
 
-(fact "modifying leaves"
+(fact "modifying leaf"
       (-> deeply-nested-map-with-vectors to-path-set (reset-leaf ["a"] 42) from-path-set) =>
       {"a" {"b" 42}
        "c" ["i" "j" "k"]
        "d" {"e" 3
             "f" {"g" 4
                  "h" [5 6 7]}}})
+
+(fact "transforming leaves"
+      (-> deeply-nested-map-with-vectors to-path-set (transform-leaf ["d"] inc) from-path-set) =>
+      {"a" {"b" 1}
+       "c" ["i" "j" "k"]
+       "d" {"e" 4
+            "f" {"g" 5
+                 "h" [6 7 8]}}})
 
 
 
