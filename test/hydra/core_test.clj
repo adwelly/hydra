@@ -119,5 +119,19 @@
             "f" {"g" 5
                  "h" [6 7 8]}}})
 
+(fact "The starts-with? function identifies paths starting with a given route"
+      (starts-with? [] ["a" 0 "b"]) => true
+      (starts-with? ["a" 0] ["a" 0 "b"]) => true
+      (starts-with? ["a" number?] ["a" 0 "b"]) => true
+      (starts-with? ["a" 1] ["a" 0 "b"]) => false
+      (starts-with? ["a" string?] ["a" 0 "b"]) => false)
+
+(fact "The ends-with? function identifies paths starting with a given route"
+      (ends-with? [] ["a" 0 "b"]) => true
+      (ends-with? [0 "b"] ["a" 0 "b"]) => true
+      (ends-with? [number? "b"] ["a" 0 "b"]) => true
+      (ends-with? [1 "b"] ["a" 0 "b"]) => false
+      (ends-with? [string? "b"] ["a" 0 "b"]) => false)
+
 
 

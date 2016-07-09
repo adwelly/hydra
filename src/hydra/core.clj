@@ -39,9 +39,14 @@
   (reduce union path-sets))
 
 (defn starts-with? [route path]
-  (every? identity (for [i (range (count route))] (= (nth route i) (nth path i)))))
+  (when (< (count route) (count path))
+    (every? identity (for [i (range (count route)) :let [route-val (nth route i) path-val (nth path i)]]
+                       (if (clojure.test/function? route-val)
+                         (route-val path-val)
+                         (= route-val path-val))))))
 
-(defn ends-with? [r p])
+(defn ends-with? [route path]
+  (starts-with? (reverse route) (reverse path)))
 
 (defn apply-leaf [p f]
   (conj (vec (butlast p)) (f (last p))))
@@ -50,12 +55,12 @@
   (let [[passed failed] (cleave #(starts-with? route %) ps)]
     (splice [(set (mapv #(apply-leaf % f) passed)) failed])))
 
-(def transform-leaves transform-leaf) ;; Synonym
+(def transform-leaves transform-leaf)                       ;; Synonym
 
 (defn reset-leaf [ps route val]
   (transform-leaf ps route (constantly val)))
 
-(def reset-leaves reset-leaf) ;; Synonym
+(def reset-leaves reset-leaf)                               ;; Synonym
 
 (defn insert [])
 
