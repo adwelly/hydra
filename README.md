@@ -26,10 +26,51 @@ As it's not particularly convenient to create trees represented as sets of vecto
 The classical [Hydra](https://en.wikipedia.org/wiki/Lernaean_Hydra) was a multi-headed serpent with the unfortunate ability to grow extra heads if one was cut off. Over the last 2000 years its occasionally been used as a metaphor for a tricky problem. It's also true that if you turn a typical whiteboard diagram of a tree upside down you get something that might just be a Hydra if you squint hard enough. However the truth is more frivolous - its actually an excuse for the quote at the top of this page and the thought that the Specter might also have been named after a famous criminal organization (yes I know the spelling isn't quite right).
 
 ## Usage
-TBS when the design has settled down
+TBS when the design has settled dow
 
 ## Examples
-TBS when the design has settled down
+
+Example 1: Append a sequence of elements to a nested vector
+
+  (def data {:a [1 2 3]})
+
+  ;; Manual Clojure
+  (update data :a (fn [v] (reduce conj v [4 5])))
+
+  ;; Hydra
+
+
+Example 2: Increment every even number nested within map of vector of maps
+
+  (def data {:a [{:aa 1 :bb 2}
+                 {:cc 3}]
+             :b [{:dd 4}]})
+
+  ;; Manual Clojure
+  (defn map-vals [m afn]
+    (->> m (map (fn [[k v]] [k (afn v)])) (into {})))
+
+  (map-vals data
+    (fn [v]
+      (mapv
+        (fn [m]
+          (map-vals
+            m
+            (fn [v] (if (even? v) (inc v) v))))
+        v)))
+
+  ;; Hydra
+
+
+Example 3: Reverse the order of even numbers in a tree (with order based on depth first search):
+
+(transform (subselect (walker number?) even?)
+  reverse
+  [1 [[[2]] 3] 5 [6 [7 8]] 10])
+;; => [1 [[[10]] 3] 5 [8 [7 6]] 2]
+
+Example 4: Replace every continuous sequence of odd numbers with its sum:
+
 
 ## Stability
 Note the use of the word 'experimental' further up the page. Things may change radically. Use at your own risk.
