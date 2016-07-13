@@ -38,6 +38,7 @@
 (defn splice [path-sets]
   (reduce union path-sets))
 
+;; Argueabley, this should be with a map
 (defn starts-with? [route path]
   (when (< (count route) (count path))
     (every? identity (for [i (range (count route)) :let [route-val (nth route i) path-val (nth path i)]]
@@ -62,13 +63,21 @@
 
 (def reset-leaves reset-leaf)                               ;; Synonym
 
-(defn insert [])
+(defn insert [target-path path-set]
+  (map #(concat target-path %) path-set))
 
 (defn insert-at [])
 
 (defn insert-before [])
 
-(defn insert-after [])
+;(defn insert-after [target-path vector-path-set]
+;  (let [largest-index (lergest-index-from-target target)]))
+
+(defn append-next [paths elem]
+  (conj paths (conj (vec (last paths)) elem)))
+
+(defn all-subpaths-of-path [path]
+  (reduce append-next [] path))
 
 
 

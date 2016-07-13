@@ -133,5 +133,18 @@
       (ends-with? [1 "b"] ["a" 0 "b"]) => false
       (ends-with? [string? "b"] ["a" 0 "b"]) => false)
 
+(future-fact "insert allows structures to be inserted into other structures"
+      (let [deep (to-path-set deeply-nested-map-with-vectors)
+            simple (to-path-set simple-map)
+            [target unchanged] (cleave #(starts-with? ["d" "f"] %) deep)]
+        (-> target) => nil))
 
+(fact "append-next appends elements to paths"
+      (append-next [] "a") => [["a"]]
+      (append-next [["a"] ["a" "b"]] "c") => [["a"]["a" "b"]["a" "b" "c"]])
+
+(fact "all-sub-paths-of-path produces all subpaths"
+      (all-subpaths-of-path []) => []
+      (all-subpaths-of-path ["a"]) => [["a"]]
+      (all-subpaths-of-path ["a" "b" "c"]) => [["a"]["a" "b"]["a" "b" "c"]])
 
