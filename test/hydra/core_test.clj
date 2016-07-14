@@ -133,18 +133,39 @@
       (ends-with? [1 "b"] ["a" 0 "b"]) => false
       (ends-with? [string? "b"] ["a" 0 "b"]) => false)
 
-(future-fact "insert allows structures to be inserted into other structures"
+(fact "insert allows structures to be inserted into other structures"
       (let [deep (to-path-set deeply-nested-map-with-vectors)
-            simple (to-path-set simple-map)
-            [target unchanged] (cleave #(starts-with? ["d" "f"] %) deep)]
-        (-> target) => nil))
+            simple (to-path-set simple-map)]
+        (-> (insert ["d" "f" "i"] deep simple) from-path-set)) =>
+      {"a" {"b" 1}
+       "c" ["i" "j" "k"]
+       "d" {"e" 3
+            "f" {"g" 4
+                 "h" [5 6 7]
+                 "i" {"a" 1
+                      "b" 2
+                      "c" 3}}}})
+
+(fact "insert allows vectors to be created on the fly"
+      (let [deep (to-path-set deeply-nested-map-with-vectors)
+            simple (to-path-set simple-map)]
+        (-> (insert ["d" "f" "i" 0] deep simple) from-path-set)) =>
+        {"a" {"b" 1}
+         "c" ["i" "j" "k"]
+         "d" {"e" 3
+              "f" {"g" 4
+                   "h" [5 6 7]
+                   "i" [{"a" 1
+                         "b" 2
+                         "c" 3}]}}})
+
 
 (fact "append-next appends elements to paths"
       (append-next [] "a") => [["a"]]
-      (append-next [["a"] ["a" "b"]] "c") => [["a"]["a" "b"]["a" "b" "c"]])
+      (append-next [["a"] ["a" "b"]] "c") => [["a"] ["a" "b"] ["a" "b" "c"]])
 
 (fact "all-sub-paths-of-path produces all subpaths"
       (all-subpaths-of-path []) => []
       (all-subpaths-of-path ["a"]) => [["a"]]
-      (all-subpaths-of-path ["a" "b" "c"]) => [["a"]["a" "b"]["a" "b" "c"]])
+      (all-subpaths-of-path ["a" "b" "c"]) => [["a"] ["a" "b"] ["a" "b" "c"]])
 
