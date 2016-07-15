@@ -91,6 +91,10 @@
 (fact "you can make a round trip from maps to path sets and back"
       (-> deeply-nested-map-with-vectors to-path-set from-path-set) => deeply-nested-map-with-vectors)
 
+(fact "path creates a path set with a single vector in it"
+      (path [1 2 3]) => #{[1 2 3]}
+      (path '("a" "b" "c")) => #{["a" "b" "c"]})
+
 (defn path-longer-than? [len path]
   (> (count path) len))
 
@@ -102,6 +106,9 @@
 
 (fact "Splicing is the inverse of cleaving"
       (->> deeply-nested-map-with-vectors to-path-set (cleave (partial path-longer-than? 3)) splice from-path-set) => deeply-nested-map-with-vectors)
+
+(fact "Cross product applies a binary function taking two paths and returning a path, to every combinations of paths in two path sets"
+      (cross-product concat #{["a"] ["b"]} #{["c"]["d"]}) => #{["a" "c"]["a" "d"]["b" "c"]["b" "d"]})
 
 (fact "modifying leaf"
       (-> deeply-nested-map-with-vectors to-path-set (reset-leaf ["a"] 42) from-path-set) =>
@@ -136,7 +143,7 @@
 (fact "insert allows structures to be inserted into other structures"
       (let [deep (to-path-set deeply-nested-map-with-vectors)
             simple (to-path-set simple-map)]
-        (-> (insert ["d" "f" "i"] deep simple) from-path-set)) =>
+        (-> (update (path ["d" "f" "i"]) deep simple) from-path-set)) =>
       {"a" {"b" 1}
        "c" ["i" "j" "k"]
        "d" {"e" 3
@@ -149,8 +156,8 @@
 (fact "insert allows vectors to be created on the fly"
       (let [deep (to-path-set deeply-nested-map-with-vectors)
             simple (to-path-set simple-map)]
-        (-> (insert ["d" "f" "i" 0] deep simple) from-path-set)) =>
-        {"a" {"b" 1}
+        (-> (update (path ["d" "f" "i" 0]) deep simple) from-path-set)) =>
+      {"a" {"b" 1}
          "c" ["i" "j" "k"]
          "d" {"e" 3
               "f" {"g" 4

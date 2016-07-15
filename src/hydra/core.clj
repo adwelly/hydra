@@ -26,6 +26,9 @@
 (defn from-path-set [ps]
   (-> ps from-path-set-to-map-of-maps vectorize))
 
+(defn path [v]
+  (set [(vec v)]))
+
 (defn cleave [pred ps]
   (loop [results '(() ()) paths (seq ps)]
     (if (not paths)
@@ -37,6 +40,9 @@
 
 (defn splice [path-sets]
   (reduce union path-sets))
+
+(defn cross-product [f ps0 ps1]
+  (set (for [x ps0 y ps1] (vec (f x y)))))
 
 (defn starts-with? [route path]
   (when (< (count route) (count path))
@@ -62,8 +68,11 @@
 
 (def reset-leaves reset-leaf)                               ;; Synonym
 
-(defn insert [target-path target-path-set inserted-path-set]
-  (union (map #(vec (concat target-path %)) inserted-path-set) target-path-set))
+;(defn insert [target-path target-path-set inserted-path-set]
+;  (union (map #(vec (concat target-path %)) inserted-path-set) target-path-set))
+
+(defn update [routes-path-set target-path-set inserted-path-set]
+  (splice [(cross-product concat routes-path-set inserted-path-set) target-path-set]))
 
 (defn insert-at [])
 
