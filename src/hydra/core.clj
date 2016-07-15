@@ -38,7 +38,6 @@
 (defn splice [path-sets]
   (reduce union path-sets))
 
-;; Argueabley, this should be with a map
 (defn starts-with? [route path]
   (when (< (count route) (count path))
     (every? identity (for [i (range (count route)) :let [route-val (nth route i) path-val (nth path i)]]
