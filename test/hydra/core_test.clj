@@ -140,10 +140,10 @@
       (ends-with? [1 "b"] ["a" 0 "b"]) => false
       (ends-with? [string? "b"] ["a" 0 "b"]) => false)
 
-(fact "insert allows structures to be inserted into other structures"
+(fact "upsert allows structures to be inserted into other structures"
       (let [deep (to-path-set deeply-nested-map-with-vectors)
             simple (to-path-set simple-map)]
-        (-> (update (path ["d" "f" "i"]) deep simple) from-path-set)) =>
+        (-> (upsert (path ["d" "f" "i"]) deep simple) from-path-set)) =>
       {"a" {"b" 1}
        "c" ["i" "j" "k"]
        "d" {"e" 3
@@ -153,10 +153,10 @@
                       "b" 2
                       "c" 3}}}})
 
-(fact "insert allows vectors to be created on the fly"
+(fact "upsert allows vectors to be created on the fly"
       (let [deep (to-path-set deeply-nested-map-with-vectors)
             simple (to-path-set simple-map)]
-        (-> (update (path ["d" "f" "i" 0]) deep simple) from-path-set)) =>
+        (-> (upsert (path ["d" "f" "i" 0]) deep simple) from-path-set)) =>
       {"a" {"b" 1}
          "c" ["i" "j" "k"]
          "d" {"e" 3

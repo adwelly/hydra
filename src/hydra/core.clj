@@ -45,11 +45,8 @@
   (set (for [x ps0 y ps1] (vec (f x y)))))
 
 (defn starts-with? [route path]
-  (when (< (count route) (count path))
-    (every? identity (for [i (range (count route)) :let [route-val (nth route i) path-val (nth path i)]]
-                       (if (clojure.test/function? route-val)
-                         (route-val path-val)
-                         (= route-val path-val))))))
+  (when (<= (count route) (count path))
+    (every? identity (map #(if (clojure.test/function? %1) (%1 %2) (= %1 %2)) route path))))
 
 (defn ends-with? [route path]
   (starts-with? (reverse route) (reverse path)))
@@ -68,7 +65,7 @@
 
 (def reset-leaves reset-leaf)                               ;; Synonym
 
-(defn update [routes-path-set target-path-set inserted-path-set]
+(defn upsert [routes-path-set target-path-set inserted-path-set]
   (splice [(cross-product concat routes-path-set inserted-path-set) target-path-set]))
 
 (defn insert-at [])
@@ -83,7 +80,3 @@
 
 (defn all-subpaths-of-path [path]
   (reduce append-next [] path))
-
-
-
-
