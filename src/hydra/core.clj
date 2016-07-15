@@ -68,9 +68,6 @@
 
 (def reset-leaves reset-leaf)                               ;; Synonym
 
-;(defn insert [target-path target-path-set inserted-path-set]
-;  (union (map #(vec (concat target-path %)) inserted-path-set) target-path-set))
-
 (defn update [routes-path-set target-path-set inserted-path-set]
   (splice [(cross-product concat routes-path-set inserted-path-set) target-path-set]))
 
