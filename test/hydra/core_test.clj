@@ -68,6 +68,9 @@
 (fact "You can recreate a simple map"
       (from-path-set-to-map-of-maps #{["a" 1] ["b" 2] ["c" 3]}) => simple-map)
 
+(fact "You can recreate a simple map from a pathset containing all subpaths"
+      (from-path-set-to-map-of-maps #{["a"] ["a" 1] ["b"] ["b" 2] ["c"] ["c" "d"] ["c" "d" "e"]}) => {"a" 1 "b" 3 "c" {"d" "e"}})
+
 (fact "You can recreate a two level map"
       (from-path-set-to-map-of-maps #{["a" 1] ["b" 2] ["c" "d" 3]}) => two-level-map)
 

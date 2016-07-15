@@ -10,9 +10,9 @@
          :else #{(conj path coll)})))
 
 (defn- add-paths [mp [hd & tail :as path]]
-  (if (= 2 (count path))
-    (assoc mp hd (second path))
-    (assoc mp hd (add-paths (get mp hd {}) tail))))
+  (cond (= 1 (count path)) (if (not (nil? (get mp hd))) mp (assoc mp hd {}))
+        (= 2 (count path)) (assoc mp hd (second path))
+        :else (assoc mp hd (add-paths (get mp hd {}) tail))))
 
 (defn- from-path-set-to-map-of-maps [path-set]
   (reduce add-paths {} path-set))
@@ -38,6 +38,8 @@
             fails (second results)]
         (recur (if (pred p) (list (conj passes p) fails) (list passes (conj fails p))) (next paths))))))
 
+;; splice has to eliminate contradictory paths
+;; Question, should a pathset contain all subpaths as well ? - then contains? can be used
 (defn splice [path-sets]
   (reduce union path-sets))
 
