@@ -3,7 +3,8 @@
             [midje.util :refer [testable-privates]]
             [hydra.core :refer :all]))
 
-(testable-privates hydra.core from-path-set-to-map-of-maps vectorize)
+(testable-privates hydra.core prepend from-path-set-to-map-of-maps vectorize)
+
 
 (def simple-map
   {"a" 1 "b" 2 "c" 3})
@@ -46,15 +47,17 @@
         "f" {"g" 4
              "h" [5 6 7]}}})
 
+(fact "prepending an element to a map prepends the element to each key of the map"
+      (prepend :a {'(:b :c) :d '(:f :g) :h}) => {'(:a :b :c) :d '(:a :f :g) :h})
 
 (fact "simple map path-set test"
-      (to-path-set simple-map) => #{["a"] 1 ["b"] 2 ["c"] 3})
+      (to-path-set simple-map) => {["a"] 1 ["b"] 2 ["c"] 3})
 
 (future-fact "simple vec path-set test"
       (to-path-set simple-vec) => #{[0 "a"] [1 "b"] [2 "c"]})
 
-(future-fact  "two level map test"
-      (to-path-set two-level-map) => #{["a" 1] ["b" 2] ["c" "d" 3]})
+(fact  "two level map test"
+      (to-path-set two-level-map) => {["a"] 1 ["b"] 2 ["c" "d"] 3})
 
 (future-fact  "A deeply nested map of maps can create a pathmap"
       (to-path-set deeply-nested-map) => #{["a" "b" 1] ["c" 2] ["d" "e" 3] ["d" "f" "g" 4] ["d" "f" "h" 5]})

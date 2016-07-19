@@ -2,12 +2,25 @@
   (:require [clojure.set :refer [union]]
             [clojure.string :refer [split]]))
 
-(defn to-path-set
-  ([coll] (to-path-set '[] coll))
-  ([path coll]
-   (cond (map? coll) (reduce union #{} (for [[k v] coll] (to-path-set (conj path k) v)))
-         (vector? coll) (reduce union #{} (for [i (range (count coll))] (to-path-set (conj path i) (nth coll i))))
-         :else #{(conj path coll)})))
+;(defn to-path-set
+;  ([coll] (to-path-set '[] coll))
+;  ([path coll]
+;   (cond (map? coll) (reduce union #{} (for [[k v] coll] (to-path-set (conj path k) v)))
+;         (vector? coll) (reduce union #{} (for [i (range (count coll))] (to-path-set (conj path i) (nth coll i))))
+;         :else #{(conj path coll)})))
+
+(defn- prepend [elem mp]
+  (into {} (for [[k v] mp] [(conj k elem) v])))
+
+(defn keys-to-vecs [mp]
+  (into {} (for [[k v] mp] [k v])))
+
+(defn to-path-set [coll]
+  (keys-to-vecs
+    (apply merge
+           (for [[k v] coll]
+             (cond (map? v) (prepend k (to-path-set v))
+                   :else {(list k) v})))))
 
 (defn- add-paths [mp [hd & tail :as path]]
   (cond (= 1 (count path)) (if (not (nil? (get mp hd))) mp (assoc mp hd {}))
