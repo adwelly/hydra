@@ -13,14 +13,16 @@
   (into {} (for [[k v] mp] [(conj k elem) v])))
 
 (defn keys-to-vecs [mp]
-  (into {} (for [[k v] mp] [k v])))
+  (into {} (for [[k v] mp] [(vec k) v])))
 
-(defn to-path-set [coll]
-  (keys-to-vecs
+(defn keys-to-path-seq [coll]
     (apply merge
            (for [[k v] coll]
-             (cond (map? v) (prepend k (to-path-set v))
-                   :else {(list k) v})))))
+             (cond (map? v) (prepend k (keys-to-path-seq v))
+                   :else {(list k) v}))))
+
+(defn to-path-set [coll]
+  (-> coll keys-to-path-seq keys-to-vecs))
 
 (defn- add-paths [mp [hd & tail :as path]]
   (cond (= 1 (count path)) (if (not (nil? (get mp hd))) mp (assoc mp hd {}))
