@@ -118,6 +118,9 @@
 (fact "Splicing is the inverse of cleaving"
              (->> deeply-nested-map-with-vectors to-path-map (cleave (partial path-longer-than? 3)) splice from-path-map) => deeply-nested-map-with-vectors)
 
+(fact "splicing can update values, (c moves from 3 to 4)"
+      (-> (splice [simple-path-map {["c"] 4}]) from-path-map) => {"a" 1 "b" 2 "c" 4})
+
 (future-fact  "Cross product applies a binary function taking two paths and returning a path, to every combinations of paths in two path sets"
       (cross-product concat #{["a"] ["b"]} #{["c"]["d"]}) => #{["a" "c"]["a" "d"]["b" "c"]["b" "d"]})
 
