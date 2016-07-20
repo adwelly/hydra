@@ -102,20 +102,20 @@
 (fact "you can make a round trip from maps to path sets and back"
              (-> deeply-nested-map-with-vectors to-path-map from-path-map) => deeply-nested-map-with-vectors)
 
-(future-fact  "path creates a path set with a single vector in it"
-      (path [1 2 3]) => #{[1 2 3]}
-      (path '("a" "b" "c")) => #{["a" "b" "c"]})
+(fact  "path creates a path map representing a simple path"
+      (path [1 2 3]) => {[1 2] 3}
+      (path '("a" "b" "c")) => {["a" "b"] "c"})
 
 (defn path-longer-than? [len path]
   (> (count path) len))
 
-(future-fact "You can cleave a set of paths in two with a predicate"
+(fact "You can cleave a set of paths into two with a predicate"
              (-> (cleave (partial path-longer-than? 3) (to-path-map deeply-nested-map-with-vectors)) first) =>
-             #{["d" "f" "h" 2 7] ["d" "f" "h" 1 6] ["d" "f" "g" 4] ["d" "f" "h" 0 5]}
+             {["d" "f" "h" 2] 7 ["d" "f" "h" 1] 6 ["d" "f" "g"] 4 ["d" "f" "h" 0] 5}
              (-> (cleave (partial path-longer-than? 3) (to-path-map deeply-nested-map-with-vectors)) second) =>
-             #{["a" "b" 1] ["c" 2 "k"] ["c" 0 "i"] ["d" "e" 3] ["c" 1 "j"]})
+             {["a" "b"] 1 ["c" 2] "k" ["c" 0] "i" ["d" "e"] 3 ["c" 1] "j"})
 
-(future-fact "Splicing is the inverse of cleaving"
+(fact "Splicing is the inverse of cleaving"
              (->> deeply-nested-map-with-vectors to-path-map (cleave (partial path-longer-than? 3)) splice from-path-map) => deeply-nested-map-with-vectors)
 
 (future-fact  "Cross product applies a binary function taking two paths and returning a path, to every combinations of paths in two path sets"

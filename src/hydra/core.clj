@@ -30,25 +30,23 @@
       (mapv second (sort-by first (into [] sub-maps)))
       sub-maps)))
 
-(defn from-path-map [ps]
-  (-> ps from-path-set-to-map-of-maps vectorize))
+(defn from-path-map [pm]
+  (-> pm from-path-set-to-map-of-maps vectorize))
 
 (defn path [v]
-  (set [(vec v)]))
+  {(-> v butlast vec) (last v)})
 
-(defn cleave [pred ps]
-  (loop [results '(() ()) paths (seq ps)]
+(defn cleave [pred pm]
+  (loop [results '(() ()) paths (seq pm)]
     (if (not paths)
-      (list (set (first results)) (set (second results)))
-      (let [p (first paths)
+      (list (into {} (first results)) (into {} (second results)))
+      (let [[k v] (first paths)
             passes (first results)
             fails (second results)]
-        (recur (if (pred p) (list (conj passes p) fails) (list passes (conj fails p))) (next paths))))))
+        (recur (if (pred (conj k v)) (list (conj passes [k v]) fails) (list passes (conj fails [k v]))) (next paths))))))
 
-;; splice has to eliminate contradictory paths
-;; Question, should a pathset contain all subpaths as well ? - then contains? can be used
-(defn splice [path-sets]
-  (reduce union path-sets))
+(defn splice [path-maps]
+  (apply merge path-maps))
 
 (defn cross-product [f ps0 ps1]
   (set (for [x ps0 y ps1] (vec (f x y)))))
