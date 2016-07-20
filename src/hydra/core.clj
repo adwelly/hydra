@@ -2,13 +2,6 @@
   (:require [clojure.set :refer [union]]
             [clojure.string :refer [split]]))
 
-;(defn to-path-set
-;  ([coll] (to-path-set '[] coll))
-;  ([path coll]
-;   (cond (map? coll) (reduce union #{} (for [[k v] coll] (to-path-set (conj path k) v)))
-;         (vector? coll) (reduce union #{} (for [i (range (count coll))] (to-path-set (conj path i) (nth coll i))))
-;         :else #{(conj path coll)})))
-
 (defn- prepend [elem mp]
   (into {} (for [[k v] mp] [(conj k elem) v])))
 
@@ -16,18 +9,23 @@
   (into {} (for [[k v] mp] [(vec k) v])))
 
 (defn keys-to-path-seq [coll]
-    (apply merge
-           (for [[k v] coll]
-             (cond (map? v) (prepend k (keys-to-path-seq v))
-                   :else {(list k) v}))))
+  (cond (map? coll) (apply merge (for [[k v] coll] (prepend k (keys-to-path-seq v))))
+        (vector? coll) (apply merge (for [i (range (count coll))] (prepend i (keys-to-path-seq (nth coll i)))))
+        :else {'() coll}))
 
-(defn to-path-set [coll]
+(defn to-path-map [coll]
   (-> coll keys-to-path-seq keys-to-vecs))
 
-(defn- add-paths [mp [hd & tail :as path]]
-  (cond (= 1 (count path)) (if (not (nil? (get mp hd))) mp (assoc mp hd {}))
-        (= 2 (count path)) (assoc mp hd (second path))
-        :else (assoc mp hd (add-paths (get mp hd {}) tail))))
+;(defn- add-paths [mp [hd & tail :as path]]
+;  (cond (= 1 (count path)) (assoc mp hd (get mp hd))
+;        (= 2 (count path)) (assoc mp hd (second path))
+;        :else (assoc mp hd (add-paths (get mp hd {}) tail))))
+
+(defn- add-paths [mp [k v]]
+  (println "Examining path k is" k " and v is " v)
+  (if (= 1 (count k))
+    (assoc mp (first k) v)
+    (assoc mp (first k) (add-paths (get mp (first k) {}) [(rest k) v]))))
 
 (defn- from-path-set-to-map-of-maps [path-set]
   (reduce add-paths {} path-set))

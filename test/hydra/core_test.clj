@@ -9,11 +9,15 @@
 (def simple-map
   {"a" 1 "b" 2 "c" 3})
 
+(def simple-path-map {["a"] 1 ["b"] 2 ["c"] 3})
+
 (def simple-vec
   ["a" "b" "c"])
 
 (def two-level-map
   {"a" 1 "b" 2 "c" {"d" 3}})
+
+(def two-level-path-map {["a"] 1 ["b"] 2 ["c" "d"] 3})
 
 (def deeply-nested-map
   {"a" {"b" 1}
@@ -21,6 +25,8 @@
    "d" {"e" 3
         "f" {"g" 4
              "h" 5}}})
+
+(def deeply-nested-path-map {["a" "b"] 1 ["c"] 2 ["d" "e"] 3 ["d" "f" "g"] 4 ["d" "f" "h"] 5})
 
 (def simple-map-with-vector
   {"a" ["b" "d" "e"]
@@ -51,34 +57,31 @@
       (prepend :a {'(:b :c) :d '(:f :g) :h}) => {'(:a :b :c) :d '(:a :f :g) :h})
 
 (fact "simple map path-set test"
-      (to-path-set simple-map) => {["a"] 1 ["b"] 2 ["c"] 3})
+      (to-path-map simple-map) => simple-path-map)
 
-(future-fact "simple vec path-set test"
-      (to-path-set simple-vec) => #{[0 "a"] [1 "b"] [2 "c"]})
+(fact "simple vec path-set test"
+      (to-path-map simple-vec) => {[0] "a" [1] "b" [2] "c"})
 
-(fact  "two level map test"
-      (to-path-set two-level-map) => {["a"] 1 ["b"] 2 ["c" "d"] 3})
+(fact "two level map test"
+      (to-path-map two-level-map) => two-level-path-map)
 
-(future-fact  "A deeply nested map of maps can create a pathmap"
-      (to-path-set deeply-nested-map) => #{["a" "b" 1] ["c" 2] ["d" "e" 3] ["d" "f" "g" 4] ["d" "f" "h" 5]})
+(fact "A deeply nested map of maps can create a pathmap"
+      (to-path-map deeply-nested-map) => deeply-nested-path-map)
 
-(future-fact  "You can mix maps and vectors"
-      (to-path-set simple-map-with-vector) => #{["a" 0 "b"] ["a" 1 "d"] ["a" 2 "e"] ["f" 2]})
+(fact "You can mix maps and vectors"
+      (to-path-map simple-map-with-vector) => {["a" 0] "b" ["a" 1] "d" ["a" 2] "e" ["f"] 2})
 
-(future-fact  "vectors can be the outermost structure"
-      (to-path-set vector-with-map) => #{[0 "a" 1] [1 "b" 2] [2 "c" 3]})
+(fact "vectors can be the outermost structure"
+             (to-path-map vector-with-map) => {[0 "a"] 1 [1 "b"] 2 [2 "c"] 3})
 
-(future-fact  "You can recreate a simple map"
-      (from-path-set-to-map-of-maps #{["a" 1] ["b" 2] ["c" 3]}) => simple-map)
+(fact  "You can recreate a simple map"
+      (from-path-set-to-map-of-maps simple-path-map) => simple-map)
 
-(future-fact  "You can recreate a simple map from a pathset containing all subpaths"
-      (from-path-set-to-map-of-maps #{["a"] ["a" 1] ["b"] ["b" 2] ["c"] ["c" "d"] ["c" "d" "e"]}) => {"a" 1 "b" 3 "c" {"d" "e"}})
+(fact  "You can recreate a two level map"
+      (from-path-set-to-map-of-maps two-level-path-map) => two-level-map)
 
-(future-fact  "You can recreate a two level map"
-      (from-path-set-to-map-of-maps #{["a" 1] ["b" 2] ["c" "d" 3]}) => two-level-map)
-
-(future-fact  "you can recreate a deeply nested map"
-      (from-path-set-to-map-of-maps #{["a" "b" 1] ["c" 2] ["d" "e" 3] ["d" "f" "g" 4] ["d" "f" "h" 5]}) => deeply-nested-map)
+(fact  "you can recreate a deeply nested map"
+      (from-path-set-to-map-of-maps deeply-nested-path-map) => deeply-nested-map)
 
 (future-fact  "vectorizing maps without numeric keys returns an unchanged map"
       (vectorize simple-map) => simple-map
@@ -94,8 +97,8 @@
 (future-fact  "you can convert a path set into map of maps and vecs"
       (from-path-set #{["a" 0 "b"] ["a" 1 "d"] ["a" 2 "e"] ["f" 2]}) => simple-map-with-vector)
 
-(future-fact  "you can make a round trip from maps to path sets and back"
-      (-> deeply-nested-map-with-vectors to-path-set from-path-set) => deeply-nested-map-with-vectors)
+(future-fact "you can make a round trip from maps to path sets and back"
+             (-> deeply-nested-map-with-vectors to-path-map from-path-set) => deeply-nested-map-with-vectors)
 
 (future-fact  "path creates a path set with a single vector in it"
       (path [1 2 3]) => #{[1 2 3]}
@@ -104,29 +107,29 @@
 (defn path-longer-than? [len path]
   (> (count path) len))
 
-(future-fact  "You can cleave a set of paths in two with a predicate"
-      (-> (cleave (partial path-longer-than? 3) (to-path-set deeply-nested-map-with-vectors)) first) =>
-      #{["d" "f" "h" 2 7] ["d" "f" "h" 1 6] ["d" "f" "g" 4] ["d" "f" "h" 0 5]}
-      (-> (cleave (partial path-longer-than? 3) (to-path-set deeply-nested-map-with-vectors)) second) =>
-      #{["a" "b" 1] ["c" 2 "k"] ["c" 0 "i"] ["d" "e" 3] ["c" 1 "j"]})
+(future-fact "You can cleave a set of paths in two with a predicate"
+             (-> (cleave (partial path-longer-than? 3) (to-path-map deeply-nested-map-with-vectors)) first) =>
+             #{["d" "f" "h" 2 7] ["d" "f" "h" 1 6] ["d" "f" "g" 4] ["d" "f" "h" 0 5]}
+             (-> (cleave (partial path-longer-than? 3) (to-path-map deeply-nested-map-with-vectors)) second) =>
+             #{["a" "b" 1] ["c" 2 "k"] ["c" 0 "i"] ["d" "e" 3] ["c" 1 "j"]})
 
-(future-fact  "Splicing is the inverse of cleaving"
-      (->> deeply-nested-map-with-vectors to-path-set (cleave (partial path-longer-than? 3)) splice from-path-set) => deeply-nested-map-with-vectors)
+(future-fact "Splicing is the inverse of cleaving"
+             (->> deeply-nested-map-with-vectors to-path-map (cleave (partial path-longer-than? 3)) splice from-path-set) => deeply-nested-map-with-vectors)
 
 (future-fact  "Cross product applies a binary function taking two paths and returning a path, to every combinations of paths in two path sets"
       (cross-product concat #{["a"] ["b"]} #{["c"]["d"]}) => #{["a" "c"]["a" "d"]["b" "c"]["b" "d"]})
 
-(future-fact  "modifying leaf"
-      (-> deeply-nested-map-with-vectors to-path-set (reset-leaf ["a"] 42) from-path-set) =>
-      {"a" {"b" 42}
+(future-fact "modifying leaf"
+             (-> deeply-nested-map-with-vectors to-path-map (reset-leaf ["a"] 42) from-path-set) =>
+             {"a" {"b" 42}
        "c" ["i" "j" "k"]
        "d" {"e" 3
             "f" {"g" 4
                  "h" [5 6 7]}}})
 
-(future-fact  "transforming leaves"
-      (-> deeply-nested-map-with-vectors to-path-set (transform-leaf ["d"] inc) from-path-set) =>
-      {"a" {"b" 1}
+(future-fact "transforming leaves"
+             (-> deeply-nested-map-with-vectors to-path-map (transform-leaf ["d"] inc) from-path-set) =>
+             {"a" {"b" 1}
        "c" ["i" "j" "k"]
        "d" {"e" 4
             "f" {"g" 5
@@ -147,8 +150,8 @@
       (ends-with? [string? "b"] ["a" 0 "b"]) => false)
 
 (future-fact  "upsert allows structures to be inserted into other structures"
-      (let [deep (to-path-set deeply-nested-map-with-vectors)
-            simple (to-path-set simple-map)]
+      (let [deep (to-path-map deeply-nested-map-with-vectors)
+            simple (to-path-map simple-map)]
         (-> (upsert (path ["d" "f" "i"]) deep simple) from-path-set)) =>
       {"a" {"b" 1}
        "c" ["i" "j" "k"]
@@ -160,8 +163,8 @@
                       "c" 3}}}})
 
 (future-fact  "upsert allows vectors to be created on the fly"
-      (let [deep (to-path-set deeply-nested-map-with-vectors)
-            simple (to-path-set simple-map)]
+      (let [deep (to-path-map deeply-nested-map-with-vectors)
+            simple (to-path-map simple-map)]
         (-> (upsert (path ["d" "f" "i" 0]) deep simple) from-path-set)) =>
       {"a" {"b" 1}
          "c" ["i" "j" "k"]
