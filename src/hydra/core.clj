@@ -16,13 +16,7 @@
 (defn to-path-map [coll]
   (-> coll keys-to-path-seq keys-to-vecs))
 
-;(defn- add-paths [mp [hd & tail :as path]]
-;  (cond (= 1 (count path)) (assoc mp hd (get mp hd))
-;        (= 2 (count path)) (assoc mp hd (second path))
-;        :else (assoc mp hd (add-paths (get mp hd {}) tail))))
-
 (defn- add-paths [mp [k v]]
-  (println "Examining path k is" k " and v is " v)
   (if (= 1 (count k))
     (assoc mp (first k) v)
     (assoc mp (first k) (add-paths (get mp (first k) {}) [(rest k) v]))))
@@ -36,7 +30,7 @@
       (mapv second (sort-by first (into [] sub-maps)))
       sub-maps)))
 
-(defn from-path-set [ps]
+(defn from-path-map [ps]
   (-> ps from-path-set-to-map-of-maps vectorize))
 
 (defn path [v]
