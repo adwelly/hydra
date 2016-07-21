@@ -45,11 +45,8 @@
             fails (second results)]
         (recur (if (pred (conj k v)) (list (conj passes [k v]) fails) (list passes (conj fails [k v]))) (next paths))))))
 
-(defn splice [path-maps]
-  (apply merge path-maps))
-
-(defn cross-product [f ps0 ps1]
-  (set (for [x ps0 y ps1] (vec (f x y)))))
+(defn cross-product [f pm0 pm1]
+  (into {} (for [x pm0 y pm1] (f x y))))
 
 (defn starts-with? [route path]
   (when (<= (count route) (count path))
@@ -63,7 +60,7 @@
 
 (defn transform-leaf [ps route f]
   (let [[passed failed] (cleave #(starts-with? route %) ps)]
-    (splice [(set (mapv #(apply-leaf % f) passed)) failed])))
+    (apply merge [(set (mapv #(apply-leaf % f) passed)) failed])))
 
 (def transform-leaves transform-leaf)                       ;; Synonym
 
@@ -72,8 +69,11 @@
 
 (def reset-leaves reset-leaf)                               ;; Synonym
 
+(defn- prepend-path [[k0 v0] [k1 v1]]
+  [(vec (concat (conj k0 v0) k1)), v1])
+
 (defn upsert [routes-path-set target-path-set inserted-path-set]
-  (splice [(cross-product concat routes-path-set inserted-path-set) target-path-set]))
+  (merge (cross-product prepend-path routes-path-set inserted-path-set) target-path-set))
 
 (defn insert-at [])
 

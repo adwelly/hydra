@@ -3,7 +3,7 @@
             [midje.util :refer [testable-privates]]
             [hydra.core :refer :all]))
 
-(testable-privates hydra.core prepend from-path-set-to-map-of-maps vectorize)
+(testable-privates hydra.core prepend from-path-set-to-map-of-maps vectorize prepend-path)
 
 
 (def simple-map
@@ -116,13 +116,16 @@
              {["a" "b"] 1 ["c" 2] "k" ["c" 0] "i" ["d" "e"] 3 ["c" 1] "j"})
 
 (fact "Splicing is the inverse of cleaving"
-             (->> deeply-nested-map-with-vectors to-path-map (cleave (partial path-longer-than? 3)) splice from-path-map) => deeply-nested-map-with-vectors)
+             (->> deeply-nested-map-with-vectors to-path-map (cleave (partial path-longer-than? 3)) (apply merge) from-path-map) => deeply-nested-map-with-vectors)
 
 (fact "splicing can update values, (c moves from 3 to 4)"
-      (-> (splice [simple-path-map {["c"] 4}]) from-path-map) => {"a" 1 "b" 2 "c" 4})
+      (-> (merge simple-path-map {["c"] 4}) from-path-map) => {"a" 1 "b" 2 "c" 4})
 
-(future-fact  "Cross product applies a binary function taking two paths and returning a path, to every combinations of paths in two path sets"
-      (cross-product concat #{["a"] ["b"]} #{["c"]["d"]}) => #{["a" "c"]["a" "d"]["b" "c"]["b" "d"]})
+(fact "prepend path takes a pair representing a path and value, from one map and a pair representing the path and value from a second map and prepends the first to the second"
+      (prepend-path [[:a :b] :c] [[:d :e] :f]) => [[:a :b :c :d :e] :f])
+
+(fact  "Cross product applies a binary function taking two pairs and returning a pair, to every combinations of path/value in two path maps"
+      (cross-product prepend-path  {[:a] 1 [:b] 2} {[:c] 3 [:d] 4}) => {[:a 1 :c] 3 [:a 1 :d] 4 [:b 2 :c] 3 [:b 2 :d] 4})
 
 (future-fact "modifying leaf"
              (-> deeply-nested-map-with-vectors to-path-map (reset-leaf ["a"] 42) from-path-map) =>
@@ -154,8 +157,8 @@
       (ends-with? [1 "b"] ["a" 0 "b"]) => false
       (ends-with? [string? "b"] ["a" 0 "b"]) => false)
 
-(future-fact "upsert allows structures to be inserted into other structures"
-             (let [deep (to-path-map deeply-nested-map-with-vectors)
+(fact "upsert allows structures to be inserted into other structures"
+      (let [deep (to-path-map deeply-nested-map-with-vectors)
             simple (to-path-map simple-map)]
                (-> (upsert (path ["d" "f" "i"]) deep simple) from-path-map)) =>
              {"a" {"b" 1}
