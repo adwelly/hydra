@@ -13,6 +13,8 @@
         (vector? coll) (apply merge (for [i (range (count coll))] (prepend i (keys-to-path-seq (nth coll i)))))
         :else {'() coll}))
 
+;; To and from path map
+
 (defn to-path-map [coll]
   (-> coll keys-to-path-seq keys-to-vecs))
 
@@ -33,6 +35,8 @@
 (defn from-path-map [pm]
   (-> pm from-path-set-to-map-of-maps vectorize))
 
+;; Basic operators (excluding merge and get)
+
 (defn path [v]
   {(-> v butlast vec) (last v)})
 
@@ -48,6 +52,8 @@
 (defn cross-product [f pm0 pm1]
   (into {} (for [x pm0 y pm1] (f x y))))
 
+;; Some predicates for cleave
+
 (defn starts-with? [route path]
   (when (<= (count route) (count path))
     (every? identity (map #(if (clojure.test/function? %1) (%1 %2) (= %1 %2)) route path))))
@@ -55,10 +61,12 @@
 (defn ends-with? [route path]
   (starts-with? (reverse route) (reverse path)))
 
-(defn apply-leaf [p f]
+;; Leaf operators
+
+(defn apply-leaf [p f] ; , <- Not even wrong
   (conj (vec (butlast p)) (f (last p))))
 
-(defn transform-leaf [ps route f]
+(defn transform-leaf [ps route f] ;<- Wrong
   (let [[passed failed] (cleave #(starts-with? route %) ps)]
     (apply merge [(set (mapv #(apply-leaf % f) passed)) failed])))
 
