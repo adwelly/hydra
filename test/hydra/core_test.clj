@@ -127,7 +127,7 @@
 (fact "Cross product applies a binary function taking two pairs and returning a pair, to every combinations of path/value in two path maps"
       (cross-product prepend-path {[:a] 1 [:b] 2} {[:c] 3 [:d] 4}) => {[:a 1 :c] 3 [:a 1 :d] 4 [:b 2 :c] 3 [:b 2 :d] 4})
 
-(future-fact "modifying leaf"
+(fact "modifying leaf"
              (-> deeply-nested-map-with-vectors to-path-map (reset-leaf ["a"] 42) from-path-map) =>
              {"a" {"b" 42}
               "c" ["i" "j" "k"]
@@ -135,7 +135,7 @@
                    "f" {"g" 4
                         "h" [5 6 7]}}})
 
-(future-fact "transforming leaves"
+(fact "transforming leaves"
              (-> deeply-nested-map-with-vectors to-path-map (transform-leaf ["d"] inc) from-path-map) =>
              {"a" {"b" 1}
               "c" ["i" "j" "k"]
@@ -143,14 +143,14 @@
                    "f" {"g" 5
                         "h" [6 7 8]}}})
 
-(future-fact "The starts-with? function identifies paths starting with a given route"
+(fact "The starts-with? function identifies paths starting with a given route"
              (starts-with? [] ["a" 0 "b"]) => true
              (starts-with? ["a" 0] ["a" 0 "b"]) => true
              (starts-with? ["a" number?] ["a" 0 "b"]) => true
              (starts-with? ["a" 1] ["a" 0 "b"]) => false
              (starts-with? ["a" string?] ["a" 0 "b"]) => false)
 
-(future-fact "The ends-with? function identifies paths starting with a given route"
+(fact "The ends-with? function identifies paths starting with a given route"
              (ends-with? [] ["a" 0 "b"]) => true
              (ends-with? [0 "b"] ["a" 0 "b"]) => true
              (ends-with? [number? "b"] ["a" 0 "b"]) => true
@@ -170,7 +170,7 @@
                       "b" 2
                       "c" 3}}}})
 
-(future-fact "upsert allows vectors to be created on the fly"
+(fact "upsert allows vectors to be created on the fly"
              (let [deep (to-path-map deeply-nested-map-with-vectors)
                    simple (to-path-map simple-map)]
                (-> (upsert (path ["d" "f" "i" 0]) deep simple) from-path-map)) =>
@@ -182,14 +182,4 @@
                         "i" [{"a" 1
                               "b" 2
                               "c" 3}]}}})
-
-
-(future-fact "append-next appends elements to paths"
-             (append-next [] "a") => [["a"]]
-             (append-next [["a"] ["a" "b"]] "c") => [["a"] ["a" "b"] ["a" "b" "c"]])
-
-(future-fact "all-sub-paths-of-path produces all subpaths"
-             (all-subpaths-of-path []) => []
-             (all-subpaths-of-path ["a"]) => [["a"]]
-             (all-subpaths-of-path ["a" "b" "c"]) => [["a"] ["a" "b"] ["a" "b" "c"]])
 

@@ -63,12 +63,10 @@
 
 ;; Leaf operators
 
-(defn apply-leaf [p f] ; , <- Not even wrong
-  (conj (vec (butlast p)) (f (last p))))
-
 (defn transform-leaf [ps route f] ;<- Wrong
-  (let [[passed failed] (cleave #(starts-with? route %) ps)]
-    (apply merge [(set (mapv #(apply-leaf % f) passed)) failed])))
+  (let [[passed failed] (cleave #(starts-with? route %) ps)
+        transformed-passed (into {} (for [[k v] passed] [k (f v)]))]
+    (merge transformed-passed failed)))
 
 (def transform-leaves transform-leaf)                       ;; Synonym
 
@@ -87,11 +85,4 @@
 
 (defn insert-before [])
 
-;(defn insert-after [target-path vector-path-set]
-;  (let [largest-index (lergest-index-from-target target)]))
-
-(defn append-next [paths elem]
-  (conj paths (conj (vec (last paths)) elem)))
-
-(defn all-subpaths-of-path [path]
-  (reduce append-next [] path))
+(defn insert-after [])
