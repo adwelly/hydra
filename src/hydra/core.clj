@@ -63,15 +63,15 @@
 
 ;; Leaf operators
 
-(defn transform-leaf [ps route f] ;<- Wrong
-  (let [[passed failed] (cleave #(starts-with? route %) ps)
+(defn transform-leaf [pm route f]
+  (let [[passed failed] (cleave #(starts-with? route %) pm)
         transformed-passed (into {} (for [[k v] passed] [k (f v)]))]
     (merge transformed-passed failed)))
 
 (def transform-leaves transform-leaf)                       ;; Synonym
 
-(defn reset-leaf [ps route val]
-  (transform-leaf ps route (constantly val)))
+(defn reset-leaf [pm route val]
+  (transform-leaf pm route (constantly val)))
 
 (def reset-leaves reset-leaf)                               ;; Synonym
 
