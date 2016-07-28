@@ -40,7 +40,7 @@
 (defn path [v]
   {(-> v butlast vec) (last v)})
 
-(defn cleave [pred pm]
+(defn cleave [pm pred]
   (loop [results '(() ()) paths (seq pm)]
     (if (not paths)
       (list (into {} (first results)) (into {} (second results)))
@@ -63,8 +63,8 @@
 
 ;; Leaf operators
 
-(defn transform-leaf [pm route f]
-  (let [[passed failed] (cleave #(starts-with? route %) pm)
+(defn transform-leaf [pm route f] ;<- Wrong
+  (let [[passed failed] (cleave pm #(starts-with? route %))
         transformed-passed (into {} (for [[k v] passed] [k (f v)]))]
     (merge transformed-passed failed)))
 
@@ -81,8 +81,18 @@
 (defn upsert [routes-path-set target-path-set inserted-path-set]
   (merge (cross-product prepend-path routes-path-set inserted-path-set) target-path-set))
 
+(defn- width-at [pm route]
+  (let [route-len (count route)
+        [passed failed] (cleave pm #(starts-with? route %))
+        passed-keys (keys passed)
+        indexes (map #(nth % route-len) passed-keys)]
+    (inc (apply max indexes))))
+
 (defn insert-at [])
 
 (defn insert-before [])
 
-(defn insert-after [])
+(defn upsert-after [pm route inserted-pm]
+  (let [width (width-at pm route)
+        new-path (conj route width)]
+    (upsert (path new-path) pm inserted-pm)))
