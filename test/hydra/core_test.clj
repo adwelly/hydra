@@ -55,6 +55,13 @@
         "f" {"g" 4
              "h" [5 6 7]}}})
 
+(fact "index-wrapper? detects IndexWrapper objects"
+      (index-wrapper? true) => false
+      (index-wrapper? 17) => false
+      (index-wrapper? (->IndexWrapper 17)) => true
+      (index-wrapper? (->IndexWrapper -5)) => true)
+
+
 (fact "prepending an element to a map prepends the element to each key of the map"
       (prepend :a {'(:b :c) :d '(:f :g) :h}) => {'(:a :b :c) :d '(:a :f :g) :h})
 
@@ -197,4 +204,3 @@
        "d" {"e" 3
             "f" {"g" 4
                  "h" [5 6 7]}}})
-

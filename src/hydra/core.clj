@@ -2,6 +2,11 @@
   (:require [clojure.set :refer [union]]
             [clojure.string :refer [split]]))
 
+(defrecord IndexWrapper [index])
+
+(defn index-wrapper? [x]
+  (instance? hydra.core.IndexWrapper x))
+
 (defn- prepend [elem mp]
   (into {} (for [[k v] mp] [(conj k elem) v])))
 
