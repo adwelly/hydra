@@ -2,7 +2,9 @@
   (:require [clojure.set :refer [union]]
             [clojure.string :refer [split]]))
 
-(defrecord IndexWrapper [index])
+(defrecord IndexWrapper [index]
+  Comparable
+  (compareTo [_ o] (- index (get o :index))))
 
 (defn index-wrapper? [x]
   (instance? hydra.core.IndexWrapper x))
@@ -15,7 +17,7 @@
 
 (defn keys-to-path-seq [coll]
   (cond (map? coll) (apply merge (for [[k v] coll] (prepend k (keys-to-path-seq v))))
-        (vector? coll) (apply merge (for [i (range (count coll))] (prepend i (keys-to-path-seq (nth coll i)))))
+        (vector? coll) (apply merge (for [i (range (count coll))] (prepend (IndexWrapper. i) (keys-to-path-seq (nth coll i)))))
         :else {'() coll}))
 
 ;; To and from path map
@@ -33,7 +35,7 @@
 
 (defn- vectorize [m-of-m]
   (let [sub-maps (into {} (for [[k v] m-of-m] [k (if (map? v) (vectorize v) v)]))]
-    (if (->> sub-maps keys (every? number?))
+    (if (->> sub-maps keys (every? index-wrapper?))
       (mapv second (sort-by first (into [] sub-maps)))
       sub-maps)))
 
@@ -90,7 +92,7 @@
   (let [route-len (count route)
         [passed failed] (cleave pm #(starts-with? route %))
         passed-keys (keys passed)
-        indexes (map #(nth % route-len) passed-keys)]
+        indexes (map #(:index  (nth % route-len)) passed-keys)]
     (inc (apply max indexes))))
 
 (defn insert-at [])
