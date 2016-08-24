@@ -177,6 +177,8 @@
       (ends-with? [1 "b"] ["a" 0 "b"]) => false
       (ends-with? [string? "b"] ["a" 0 "b"]) => false)
 
+;; Tests for upsert
+
 (future-fact "upsert allows structures to be inserted into other structures"
       (let [deep (to-path-map deeply-nested-map-with-vectors)
             simple (to-path-map simple-map)]
@@ -217,3 +219,19 @@
        "d" {"e" 3
             "f" {"g" 4
                  "h" [5 6 7]}}})
+
+;; Tests for sets
+
+(fact "A set is converted to paths with index wrappers with unique negative numbers in it"
+      (to-path-map #{:a}) => {[#hydra.core.IndexWrapper{:index -1}] :a}
+      (-> (to-path-map #{:a :b}) clojure.set/map-invert :a first index-wrapper?) => true
+      (-> (to-path-map #{:a :b}) clojure.set/map-invert :b first index-wrapper?) => true
+      (let [index-a (-> (to-path-map #{:a :b}) clojure.set/map-invert :a first :index)
+            index-b (-> (to-path-map #{:a :b}) clojure.set/map-invert :b first :index)]
+        index-a => (fn [x] (< x 0))
+        index-b => (fn [x] (< x 0))
+        (= index-a index-b) => false))
+
+
+
+

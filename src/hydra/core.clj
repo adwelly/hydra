@@ -18,6 +18,8 @@
 (defn keys-to-path-seq [coll]
   (cond (map? coll) (apply merge (for [[k v] coll] (prepend k (keys-to-path-seq v))))
         (vector? coll) (apply merge (for [i (range (count coll))] (prepend (IndexWrapper. i) (keys-to-path-seq (nth coll i)))))
+        (set? coll) (let [set-as-seq (seq coll)]
+                      (apply merge (for [i (range (count coll))] (prepend (IndexWrapper. (* (+ i 1) -1)) (keys-to-path-seq (nth set-as-seq i))))))
         :else {'() coll}))
 
 ;; To and from path map
