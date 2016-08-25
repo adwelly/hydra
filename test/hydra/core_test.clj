@@ -4,7 +4,7 @@
             [hydra.core :refer :all])
   (:import (hydra.core IndexWrapper)))
 
-(testable-privates hydra.core prepend from-path-set-to-map-of-maps vectorize prepend-path width-at)
+(testable-privates hydra.core prepend from-path-set-to-map-of-maps insert-sets-vectors prepend-path width-at)
 
 
 (def simple-map
@@ -59,12 +59,27 @@
         "f" {"g" 4
              "h" [5 6 7]}}})
 
+(def simple-set-map
+  {[#hydra.core.IndexWrapper{:index -1}] :a
+   [#hydra.core.IndexWrapper{:index -2}] :b})
+
 (fact "index-wrapper? detects IndexWrapper objects"
       (index-wrapper? true) => false
       (index-wrapper? 17) => false
       (index-wrapper? (->IndexWrapper 17)) => true
       (index-wrapper? (->IndexWrapper -5)) => true)
 
+(fact "pos-index-wrapper? detects positive IndexWrapper objects"
+      (pos-index-wrapper? true) => false
+      (pos-index-wrapper? 17) => false
+      (pos-index-wrapper? (->IndexWrapper 17)) => true
+      (pos-index-wrapper? (->IndexWrapper -5)) => false)
+
+(fact "neg-index-wrapper? detects negative IndexWrapper objects"
+      (neg-index-wrapper? true) => false
+      (neg-index-wrapper? 17) => false
+      (neg-index-wrapper? (->IndexWrapper 17)) => false
+      (neg-index-wrapper? (->IndexWrapper -5)) => true)
 
 (fact "prepending an element to a map prepends the element to each key of the map"
       (prepend :a {'(:b :c) :d '(:f :g) :h}) => {'(:a :b :c) :d '(:a :f :g) :h})
@@ -99,15 +114,15 @@
       (from-path-set-to-map-of-maps deeply-nested-path-map) => deeply-nested-map)
 
 (fact "vectorizing maps without numeric keys returns an unchanged map"
-      (vectorize simple-map) => simple-map
-      (vectorize two-level-map) => two-level-map
-      (vectorize deeply-nested-map) => deeply-nested-map)
+      (insert-sets-vectors simple-map) => simple-map
+      (insert-sets-vectors two-level-map) => two-level-map
+      (insert-sets-vectors deeply-nested-map) => deeply-nested-map)
 
 (fact "vectorizing a map with exclusively numeric keys returns a vector"
-      (vectorize numeric-keyed-map) => ["a" "b" "c"])
+      (insert-sets-vectors numeric-keyed-map) => ["a" "b" "c"])
 
 (fact "vectorizing a map with embeded numeric keys returns a map with an embeded vector"
-      (vectorize map-with-numeric-keys-representing-vector) => {"a" ["b" "c" "d"] "e" 2})
+      (insert-sets-vectors map-with-numeric-keys-representing-vector) => {"a" ["b" "c" "d"] "e" 2})
 
 (fact "you can convert a path set into map of maps and vecs"
       (from-path-map simple-map-with-vector-path-map) => simple-map-with-vector)
@@ -231,6 +246,9 @@
         index-a => (fn [x] (< x 0))
         index-b => (fn [x] (< x 0))
         (= index-a index-b) => false))
+
+(fact "a pathmap representing a set is converted to a set by from-path-map"
+      (from-path-map simple-set-map) => #{:a :b})
 
 
 

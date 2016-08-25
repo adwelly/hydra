@@ -9,6 +9,12 @@
 (defn index-wrapper? [x]
   (instance? hydra.core.IndexWrapper x))
 
+(defn pos-index-wrapper? [x]
+  (and (instance? hydra.core.IndexWrapper x) (<= 0 (:index x))))
+
+(defn neg-index-wrapper? [x]
+  (and (instance? hydra.core.IndexWrapper x) (> 0 (:index x))))
+
 (defn- prepend [elem mp]
   (into {} (for [[k v] mp] [(conj k elem) v])))
 
@@ -35,14 +41,14 @@
 (defn- from-path-set-to-map-of-maps [path-set]
   (reduce add-paths {} path-set))
 
-(defn- vectorize [m-of-m]
-  (let [sub-maps (into {} (for [[k v] m-of-m] [k (if (map? v) (vectorize v) v)]))]
-    (if (->> sub-maps keys (every? index-wrapper?))
-      (mapv second (sort-by first (into [] sub-maps)))
-      sub-maps)))
+(defn- insert-sets-vectors [m-of-m]
+  (let [sub-maps (into {} (for [[k v] m-of-m] [k (if (map? v) (insert-sets-vectors v) v)]))]
+    (cond (->> sub-maps keys (every? pos-index-wrapper?)) (mapv second (sort-by first (into [] sub-maps)))
+          (->> sub-maps keys (every? neg-index-wrapper?)) (set (mapv second (into [] sub-maps)))
+          :else sub-maps)))
 
 (defn from-path-map [pm]
-  (-> pm from-path-set-to-map-of-maps vectorize))
+  (-> pm from-path-set-to-map-of-maps insert-sets-vectors))
 
 ;; Basic operators (excluding merge and get)
 
