@@ -59,6 +59,12 @@
         "f" {"g" 4
              "h" [5 6 7]}}})
 
+(def deeply-nested-map-with-sets-and-vectors
+  {:a {:b 1}
+   :c #{"i" "j" #{:k}}
+   "d" {"e" 3
+        "f" [4 :h #{5 6 7}]}})
+
 (def simple-set-map
   {[#hydra.core.IndexWrapper{:index -1}] :a
    [#hydra.core.IndexWrapper{:index -2}] :b})
@@ -249,6 +255,9 @@
 
 (fact "a pathmap representing a set is converted to a set by from-path-map"
       (from-path-map simple-set-map) => #{:a :b})
+
+(fact "You can do a round trip with deeply nested maps containing sets and vectors"
+      (-> deeply-nested-map-with-sets-and-vectors to-path-map from-path-map) => deeply-nested-map-with-sets-and-vectors)
 
 
 
