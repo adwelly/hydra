@@ -236,9 +236,9 @@
         {:money 499999000}
         {:money 8272280}]})
 
-(fact "the standard vals and map functions allow the amount going to the bank to be calculated"
+(fact "the standard count function allows the amount going to the bank to be calculated"
       (let [big-accounts (-> world to-path-map (cleave accounts-with-more-than-100000?) first)]
-        (apply + (map (constantly 1000) (vals big-accounts))) => 3000))
+        (* 1000 (count big-accounts)) => 3000))
 
 (fact "the original bank funds is given by the standard get function:"
       (-> world to-path-map (get [:bank :funds])) => 470000000000)
@@ -247,7 +247,7 @@
       (let [world-paths (to-path-map world)
             [big-accounts _] (cleave world-paths accounts-with-more-than-100000?)
             taxed-accounts (vmap big-accounts #(- % 1000))
-            total-collected (apply + (map (constantly 1000) (vals big-accounts)))]
+            total-collected (* 1000 (count big-accounts))]
         (from-path-map (upsert world-paths taxed-accounts {[:bank :funds] (+ total-collected (world-paths [:bank :funds]))}))) =>
       {:people
              [{:money 128825 :name "Alice Brown"}
