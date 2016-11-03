@@ -80,24 +80,8 @@
 (defn splice [[pm0 pm1]]
   (merge pm0 pm1))
 
-(defn kmap [f pm]
+(defn kmap [pm f]
   (zipmap (map f (keys pm)) (vals pm)))
 
-(defn vmap [f pm]
+(defn vmap [pm f]
   (zipmap (keys pm) (map f (vals pm))))
-;
-;(defn- width-at [pm route]
-;  (let [route-len (count route)
-;        [passed failed] (cleave pm #(starts-with? route %))
-;        passed-keys (keys passed)
-;        indexes (map #(:index  (nth % route-len)) passed-keys)]
-;    (inc (apply max indexes))))
-;
-;(defn insert-at [])
-;
-;(defn insert-before [])
-;
-;(defn upsert-after [pm route inserted-pm]
-;  (let [width (width-at pm route)
-;        new-path (conj route width)]
-;    (upsert (path new-path) pm inserted-pm)))

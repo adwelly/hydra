@@ -166,32 +166,10 @@
       (-> (upsert simple-path-map {["c"] 4}) from-path-map) => {"a" 1 "b" 2 "c" 4})
 
 (fact "kmap maps a function over the keys of a map"
-      (kmap #(conj % :e) {[:a :b] 1 [:c :d] 2}) => {[:a :b :e] 1 [:c :d :e] 2})
+      (kmap {[:a :b] 1 [:c :d] 2} #(conj % :e)) => {[:a :b :e] 1 [:c :d :e] 2})
 
 (fact "vmap maps a function over the vals of a map"
-      (vmap inc {[:a :b] 1 [:c :d] 2}) => {[:a :b] 2 [:c :d] 3})
-
-;(fact "prepend path takes a pair representing a path and value, from one map and a pair representing the path and value from a second map and prepends the first to the second"
-;      (prepend-path [[:a :b] :c] [[:d :e] :f]) => [[:a :b :c :d :e] :f])
-;
-;(future-fact "Cross product applies a binary function taking two pairs and returning a pair, to every combinations of path/value in two path maps"
-;      (cross-product prepend-path {[:a] 1 [:b] 2} {[:c] 3 [:d] 4}) => {[:a 1 :c] 3 [:a 1 :d] 4 [:b 2 :c] 3 [:b 2 :d] 4})
-;
-;(fact "modifying leaf"
-;      (-> deeply-nested-map-with-vectors to-path-map (reset-leaf ["a"] 42) from-path-map) =>
-;      {"a" {"b" 42}
-;       "c" ["i" "j" "k"]
-;       "d" {"e" 3
-;            "f" {"g" 4
-;                 "h" [5 6 7]}}})
-;
-;(fact "transforming leaves"
-;      (-> deeply-nested-map-with-vectors to-path-map (transform-leaf ["d"] inc) from-path-map) =>
-;      {"a" {"b" 1}
-;       "c" ["i" "j" "k"]
-;       "d" {"e" 4
-;            "f" {"g" 5
-;                 "h" [6 7 8]}}})
+      (vmap {[:a :b] 1 [:c :d] 2} inc) => {[:a :b] 2 [:c :d] 3})
 
 (fact "The starts-with? function identifies paths starting with a given route"
       (starts-with? [] ["a" 0 "b"] 7) => true
@@ -225,6 +203,62 @@
 
 (fact "You can do a round trip with deeply nested maps containing sets and vectors"
       (-> deeply-nested-map-with-sets-and-vectors to-path-map from-path-map) => deeply-nested-map-with-sets-and-vectors)
+
+
+(def world
+  {:people
+   [{:money 129825 :name "Alice Brown"}
+    {:money 100 :name "John Smith"}
+    {:money 500000000 :name "Scrooge McDuck"}
+    {:money 2870 :name "Charlie Johnson"}
+    {:money 8273280 :name "Michael Smith"}]
+   :bank {:funds 470000000000}})
+
+;; Anyone with more than 100000 must give 100 to the bank....
+
+(defn accounts-with-more-than-100000? [path v]
+  (and (starts-with? [:people] path v)
+       (ends-with? [:money] path v)
+       (<= 100000 v)))
+
+(fact "The accounts with more than 100,000 are selected by the accounts-with-more-than-100000? function"
+      (-> world to-path-map (cleave accounts-with-more-than-100000?) first from-path-map) =>
+        {:people
+               [{:money 129825}
+                {:money 500000000}
+                {:money 8273280}]})
+
+(fact "vmap allows a fixed amount to be removed"
+      (let [big-accounts (-> world to-path-map (cleave accounts-with-more-than-100000?) first)]
+        (from-path-map (vmap big-accounts #(- % 1000)))) =>
+      {:people
+       [{:money 128825}
+        {:money 499999000}
+        {:money 8272280}]})
+
+(fact "the standard vals and map functions allow the amount going to the bank to be calculated"
+      (let [big-accounts (-> world to-path-map (cleave accounts-with-more-than-100000?) first)]
+        (apply + (map (constantly 1000) (vals big-accounts))) => 3000))
+
+(fact "the original bank funds is given by the standard get function:"
+      (-> world to-path-map (get [:bank :funds])) => 470000000000)
+
+(fact "this can now be assembled into a working example"
+      (let [world-paths (to-path-map world)
+            [big-accounts _] (cleave world-paths accounts-with-more-than-100000?)
+            taxed-accounts (vmap big-accounts #(- % 1000))
+            total-collected (apply + (map (constantly 1000) (vals big-accounts)))]
+        (from-path-map (upsert world-paths taxed-accounts {[:bank :funds] (+ total-collected (world-paths [:bank :funds]))}))) =>
+      {:people
+             [{:money 128825 :name "Alice Brown"}
+              {:money 100 :name "John Smith"}
+              {:money 499999000 :name "Scrooge McDuck"}
+              {:money 2870 :name "Charlie Johnson"}
+              {:money 8272280 :name "Michael Smith"}]
+       :bank {:funds 470000003000}})
+
+
+
 
 
 
