@@ -140,106 +140,73 @@
       (path [1 2 3]) => {[1 2] 3}
       (path '("a" "b" "c")) => {["a" "b"] "c"})
 
-(defn path-longer-than? [len path]
+(defn path-longer-than? [len path _]
   (> (count path) len))
 
 (fact "You can cleave a set of paths into two with a predicate"
       (-> (cleave (to-path-map deeply-nested-map-with-vectors) (partial path-longer-than? 3)) first) =>
       {["d" "f" "h" #hydra.core.IndexWrapper{:index 2}] 7
        ["d" "f" "h" #hydra.core.IndexWrapper{:index 1}] 6
-       ["d" "f" "g"] 4
        ["d" "f" "h" #hydra.core.IndexWrapper{:index 0}] 5}
       (-> (cleave (to-path-map deeply-nested-map-with-vectors) (partial path-longer-than? 3) ) second) =>
       {["a" "b"] 1
        ["c" #hydra.core.IndexWrapper{:index 2}] "k"
        ["c" #hydra.core.IndexWrapper{:index 0}] "i"
+       ["d" "f" "g"] 4
        ["d" "e"] 3
        ["c" #hydra.core.IndexWrapper{:index 1}] "j"})
 
-(fact "Splicing is the inverse of cleaving"
-      (from-path-map (apply merge (-> deeply-nested-map-with-vectors to-path-map (cleave (partial path-longer-than? 3)))))  => deeply-nested-map-with-vectors)
+(fact "upsert is the inverse of cleaving"
+      (from-path-map (apply upsert (-> deeply-nested-map-with-vectors to-path-map (cleave (partial path-longer-than? 3)))))  => deeply-nested-map-with-vectors)
 
-(fact "splicing can update values, (c moves from 3 to 4)"
-      (-> (merge simple-path-map {["c"] 4}) from-path-map) => {"a" 1 "b" 2 "c" 4})
+(fact "splice is the inverse of cleaving"
+      (-> deeply-nested-map-with-vectors to-path-map (cleave (partial path-longer-than? 3)) splice from-path-map) => deeply-nested-map-with-vectors)
 
-(fact "prepend path takes a pair representing a path and value, from one map and a pair representing the path and value from a second map and prepends the first to the second"
-      (prepend-path [[:a :b] :c] [[:d :e] :f]) => [[:a :b :c :d :e] :f])
+(fact "upsert can update values, (c moves from 3 to 4)"
+      (-> (upsert simple-path-map {["c"] 4}) from-path-map) => {"a" 1 "b" 2 "c" 4})
 
-(future-fact "Cross product applies a binary function taking two pairs and returning a pair, to every combinations of path/value in two path maps"
-      (cross-product prepend-path {[:a] 1 [:b] 2} {[:c] 3 [:d] 4}) => {[:a 1 :c] 3 [:a 1 :d] 4 [:b 2 :c] 3 [:b 2 :d] 4})
+(fact "kmap maps a function over the keys of a map"
+      (kmap #(conj % :e) {[:a :b] 1 [:c :d] 2}) => {[:a :b :e] 1 [:c :d :e] 2})
 
-(fact "modifying leaf"
-      (-> deeply-nested-map-with-vectors to-path-map (reset-leaf ["a"] 42) from-path-map) =>
-      {"a" {"b" 42}
-       "c" ["i" "j" "k"]
-       "d" {"e" 3
-            "f" {"g" 4
-                 "h" [5 6 7]}}})
+(fact "vmap maps a function over the vals of a map"
+      (vmap inc {[:a :b] 1 [:c :d] 2}) => {[:a :b] 2 [:c :d] 3})
 
-(fact "transforming leaves"
-      (-> deeply-nested-map-with-vectors to-path-map (transform-leaf ["d"] inc) from-path-map) =>
-      {"a" {"b" 1}
-       "c" ["i" "j" "k"]
-       "d" {"e" 4
-            "f" {"g" 5
-                 "h" [6 7 8]}}})
+;(fact "prepend path takes a pair representing a path and value, from one map and a pair representing the path and value from a second map and prepends the first to the second"
+;      (prepend-path [[:a :b] :c] [[:d :e] :f]) => [[:a :b :c :d :e] :f])
+;
+;(future-fact "Cross product applies a binary function taking two pairs and returning a pair, to every combinations of path/value in two path maps"
+;      (cross-product prepend-path {[:a] 1 [:b] 2} {[:c] 3 [:d] 4}) => {[:a 1 :c] 3 [:a 1 :d] 4 [:b 2 :c] 3 [:b 2 :d] 4})
+;
+;(fact "modifying leaf"
+;      (-> deeply-nested-map-with-vectors to-path-map (reset-leaf ["a"] 42) from-path-map) =>
+;      {"a" {"b" 42}
+;       "c" ["i" "j" "k"]
+;       "d" {"e" 3
+;            "f" {"g" 4
+;                 "h" [5 6 7]}}})
+;
+;(fact "transforming leaves"
+;      (-> deeply-nested-map-with-vectors to-path-map (transform-leaf ["d"] inc) from-path-map) =>
+;      {"a" {"b" 1}
+;       "c" ["i" "j" "k"]
+;       "d" {"e" 4
+;            "f" {"g" 5
+;                 "h" [6 7 8]}}})
 
 (fact "The starts-with? function identifies paths starting with a given route"
-      (starts-with? [] ["a" 0 "b"]) => true
-      (starts-with? ["a" 0] ["a" 0 "b"]) => true
-      (starts-with? ["a" number?] ["a" 0 "b"]) => true
-      (starts-with? ["a" 1] ["a" 0 "b"]) => false
-      (starts-with? ["a" string?] ["a" 0 "b"]) => false)
+      (starts-with? [] ["a" 0 "b"] 7) => true
+      (starts-with? ["a" 0] ["a" 0 "b"] 7) => true
+      (starts-with? ["a" number?] ["a" 0 "b"] 8) => true
+      (starts-with? ["a" 1] ["a" 0 "b"] 9) => false
+      (starts-with? ["a" string?] ["a" 0 "b"] 7) => false)
 
 (fact "The ends-with? function identifies paths starting with a given route"
-      (ends-with? [] ["a" 0 "b"]) => true
-      (ends-with? [0 "b"] ["a" 0 "b"]) => true
-      (ends-with? [number? "b"] ["a" 0 "b"]) => true
-      (ends-with? [1 "b"] ["a" 0 "b"]) => false
-      (ends-with? [string? "b"] ["a" 0 "b"]) => false)
+      (ends-with? [] ["a" 0 "b"] 3) => true
+      (ends-with? [0 "b"] ["a" 0 "b"] 2) => true
+      (ends-with? [number? "b"] ["a" 0 "b"] 1) => true
+      (ends-with? [1 "b"] ["a" 0 "b"] 7) => false
+      (ends-with? [string? "b"] ["a" 0 "b"] 9) => false)
 
-;; Tests for upsert
-
-(future-fact "upsert allows structures to be inserted into other structures"
-      (let [deep (to-path-map deeply-nested-map-with-vectors)
-            simple (to-path-map simple-map)]
-        (-> (upsert (path ["d" "f" "i"]) deep simple) from-path-map)) =>
-      {"a" {"b" 1}
-       "c" ["i" "j" "k"]
-       "d" {"e" 3
-            "f" {"g" 4
-                 "h" [5 6 7]
-                 "i" {"a" 1
-                      "b" 2
-                      "c" 3}}}})
-
-(future-fact "upsert allows vectors to be created on the fly"
-      (let [deep (to-path-map deeply-nested-map-with-vectors)
-            simple (to-path-map simple-map)]
-        (-> (upsert (path ["d" "f" "i" 0]) deep simple) from-path-map)) =>
-      {"a" {"b" 1}
-       "c" ["i" "j" "k"]
-       "d" {"e" 3
-            "f" {"g" 4
-                 "h" [5 6 7]
-                 "i" [{"a" 1
-                       "b" 2
-                       "c" 3}]}}})
-
-(fact "width at finds the width of a vector at the given route"
-      (width-at (to-path-map deeply-nested-map-with-vectors) ["c"]) => 3)
-
-(future-fact "upsert-after wilL place a new element at the end of a vector"
-      (let [deep (to-path-map deeply-nested-map-with-vectors)
-            simple (to-path-map simple-map)]
-        (-> (upsert-after deep ["c"] simple) from-path-map)) =>
-      {"a" {"b" 1}
-       "c" ["i" "j" "k" {"a" 1
-                         "b" 2
-                         "c" 3}]
-       "d" {"e" 3
-            "f" {"g" 4
-                 "h" [5 6 7]}}})
 
 ;; Tests for sets
 

@@ -50,7 +50,7 @@
 (defn from-path-map [pm]
   (-> pm from-path-set-to-map-of-maps insert-sets-vectors))
 
-;; Basic operators (excluding merge and get)
+;; Basic operators
 
 (defn path [v]
   {(-> v butlast vec) (last v)})
@@ -62,52 +62,42 @@
       (let [[k v] (first paths)
             passes (first results)
             fails (second results)]
-        (recur (if (pred (conj k v)) (list (conj passes [k v]) fails) (list passes (conj fails [k v]))) (next paths))))))
-
-(defn cross-product [f pm0 pm1]
-  (into {} (for [x pm0 y pm1] (f x y))))
+        (recur (if (pred k v) (list (conj passes [k v]) fails) (list passes (conj fails [k v]))) (next paths))))))
 
 ;; Some predicates for cleave
 
-(defn starts-with? [route path]
+(defn starts-with? [route path _]
   (when (<= (count route) (count path))
     (every? identity (map #(if (clojure.test/function? %1) (%1 %2) (= %1 %2)) route path))))
 
-(defn ends-with? [route path]
-  (starts-with? (reverse route) (reverse path)))
+(defn ends-with? [route path val]
+  (starts-with? (reverse route) (reverse path) val))
 
-;; Leaf operators
+;; Other operators
 
-(defn transform-leaf [pm route f] ;<- Wrong
-  (let [[passed failed] (cleave pm #(starts-with? route %))
-        transformed-passed (into {} (for [[k v] passed] [k (f v)]))]
-    (merge transformed-passed failed)))
+(def upsert merge)
 
-(def transform-leaves transform-leaf)                       ;; Synonym
+(defn splice [[pm0 pm1]]
+  (merge pm0 pm1))
 
-(defn reset-leaf [pm route val]
-  (transform-leaf pm route (constantly val)))
+(defn kmap [f pm]
+  (zipmap (map f (keys pm)) (vals pm)))
 
-(def reset-leaves reset-leaf)                               ;; Synonym
-
-(defn- prepend-path [[k0 v0] [k1 v1]]
-  [(vec (concat (conj k0 v0) k1)), v1])
-
-(defn upsert [routes-path-set target-path-set inserted-path-set]
-  (merge (cross-product prepend-path routes-path-set inserted-path-set) target-path-set))
-
-(defn- width-at [pm route]
-  (let [route-len (count route)
-        [passed failed] (cleave pm #(starts-with? route %))
-        passed-keys (keys passed)
-        indexes (map #(:index  (nth % route-len)) passed-keys)]
-    (inc (apply max indexes))))
-
-(defn insert-at [])
-
-(defn insert-before [])
-
-(defn upsert-after [pm route inserted-pm]
-  (let [width (width-at pm route)
-        new-path (conj route width)]
-    (upsert (path new-path) pm inserted-pm)))
+(defn vmap [f pm]
+  (zipmap (keys pm) (map f (vals pm))))
+;
+;(defn- width-at [pm route]
+;  (let [route-len (count route)
+;        [passed failed] (cleave pm #(starts-with? route %))
+;        passed-keys (keys passed)
+;        indexes (map #(:index  (nth % route-len)) passed-keys)]
+;    (inc (apply max indexes))))
+;
+;(defn insert-at [])
+;
+;(defn insert-before [])
+;
+;(defn upsert-after [pm route inserted-pm]
+;  (let [width (width-at pm route)
+;        new-path (conj route width)]
+;    (upsert (path new-path) pm inserted-pm)))
