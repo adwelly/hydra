@@ -257,6 +257,59 @@
               {:money 8272280 :name "Michael Smith"}]
        :bank {:funds 470000003000}})
 
+(defn take-fee-from-big-account [{:keys [money] :as ac}]
+  (if (< 100000 money)
+    (assoc ac :money (- money 1000))
+    ac))
+
+(fact "CONVENTIONAL: take fee from big account takes an account and returns it with a fee extracted if needed"
+      (take-fee-from-big-account {:money 128825 :name "Alice Brown"}) => {:money 127825 :name "Alice Brown"}
+      (take-fee-from-big-account {:money 100 :name "John Smith"}) => {:money 100 :name "John Smith"})
+
+(defn calculate-fees [total-fees {money :money}]
+  (if (< 100000 money) (+ total-fees 1000) total-fees))
+
+(fact "CONVENTIONAL: calulate the total fees owed to the bank"
+      (calculate-fees 999 {:money 128825 :name "Alice Brown"}) => 1999
+      (calculate-fees 999 {:money 100 :name "John Smith"}) => 999)
+
+(fact "CONVENTIONAL: passes over twice and does twice the number of comparisons"
+      (let [the-people (world :people)
+            updated-accounts (mapv take-fee-from-big-account the-people)
+            total-fees (reduce calculate-fees 0 the-people)]
+        {:people updated-accounts :bank {:funds (+ (get-in world [:bank :funds]) total-fees)}}) =>
+      {:people
+             [{:money 128825 :name "Alice Brown"}
+              {:money 100 :name "John Smith"}
+              {:money 499999000 :name "Scrooge McDuck"}
+              {:money 2870 :name "Charlie Johnson"}
+              {:money 8272280 :name "Michael Smith"}]
+       :bank {:funds 470000003000}})
+
+(defn single-pass-take-fees [{:keys [money] :as ac}]
+  (if (< 100000 money)
+   (list (assoc ac :money (- money 1000)) 1000)
+   (list ac 0)))
+
+(fact "CONVENTIONAL SINGLE PASS: single-pass-take-fees"
+      (single-pass-take-fees {:money 128825 :name "Alice Brown"}) => [{:money 127825 :name "Alice Brown"} 1000]
+      (single-pass-take-fees {:money 100 :name "John Smith"}) => [{:money 100 :name "John Smith"} 0])
+
+(fact "CONVENTIONAL SINGLE PASS: introduces an intermediate data structure of pairs"
+      (let [the-people (world :people)
+            updated-accounts-and-fees (map single-pass-take-fees the-people)
+            updated-accounts (mapv first updated-accounts-and-fees)
+            total-fee-list (map second updated-accounts-and-fees)
+            total-fees (apply + total-fee-list)]
+        {:people updated-accounts :bank {:funds (+ (get-in world [:bank :funds]) total-fees)}}) =>
+      {:people
+             [{:money 128825 :name "Alice Brown"}
+              {:money 100 :name "John Smith"}
+              {:money 499999000 :name "Scrooge McDuck"}
+              {:money 2870 :name "Charlie Johnson"}
+              {:money 8272280 :name "Michael Smith"}]
+       :bank {:funds 470000003000}})
+
 (fact "Largest index find the largest index in a set of paths that start with a particular path"
       (largest-index [:a :b :c] 0 [:a :b :c #hydra.core.IndexWrapper{:index 3}]) => 3
       (largest-index [:a :b :c] 5 [:a :b :c #hydra.core.IndexWrapper{:index 3}]) => 5
