@@ -257,6 +257,17 @@
               {:money 8272280 :name "Michael Smith"}]
        :bank {:funds 470000003000}})
 
+(fact "Largest index find the largest index in a set of paths that start with a particular path"
+      (largest-index [:a :b :c] 0 [:a :b :c #hydra.core.IndexWrapper{:index 3}]) => 3
+      (largest-index [:a :b :c] 5 [:a :b :c #hydra.core.IndexWrapper{:index 3}]) => 5
+      (largest-index [:a :b :c] 5 [:a :b :c :d]) => 5)
+
+(fact "kreduce reduces over the paths of a pathmap"
+      (kreduce simple-map-with-vector-path-map -1 (partial largest-index ["a"])) => 2)
+
+(fact "append-value appends a simple value to a vector"
+      (-> simple-map-with-vector to-path-map (append-value ["a"] :d) from-path-map) => {"a" ["b" "d" :d], "f" 2})
+
 
 
 

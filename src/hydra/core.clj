@@ -85,3 +85,22 @@
 
 (defn vmap [pm f]
   (zipmap (keys pm) (map f (vals pm))))
+
+(defn kreduce [pm init f]
+  (reduce f init (keys pm)))
+
+;; Some predicates for kreduce
+
+(defn largest-index [route i path]
+  (let [cr (count route)
+        index (if (and (starts-with? route path 0)
+                       (< cr (count path))
+                       (index-wrapper? (nth path cr)))
+                (:index (nth path cr)) -1)]
+    (if (< i index) index i)))
+
+;; Higher level functions
+
+(defn append-value [pm route v]
+    (assoc pm (conj route (IndexWrapper. (kreduce pm -1 (partial largest-index route)))) v))
+
