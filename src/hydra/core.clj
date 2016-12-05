@@ -89,6 +89,10 @@
 (defn kreduce [pm init f]
   (reduce f init (keys pm)))
 
+(defn vreduce [pm init f]
+
+  (reduce f init (vals pm)))
+
 ;; Some predicates for kreduce
 
 (defn largest-index [route i path]

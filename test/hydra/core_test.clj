@@ -321,6 +321,9 @@
 (fact "append-value appends a simple value to a vector"
       (-> simple-map-with-vector to-path-map (append-value ["a"] :d) from-path-map) => {"a" ["b" "d" :d], "f" 2})
 
+(fact "kreduce reduces over the vals of a path-map"
+      (-> simple-map to-path-map (vreduce 0 +)) => 6)
+
 
 
 
