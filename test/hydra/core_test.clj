@@ -66,26 +66,14 @@
         "f" [4 :h #{5 6 7}]}})
 
 (def simple-set-map
-  {[#hydra.core.IndexWrapper{:index -1}] :a
-   [#hydra.core.IndexWrapper{:index -2}] :b})
+  {[#hydra.core.SetWrapper{:uuid "d21622cd-f525-4988-b510-efbab4114998"}] :a
+   [#hydra.core.SetWrapper{:uuid "e499eb81-3533-4d9a-9928-ace7bc779ade"}] :b})
 
 (fact "index-wrapper? detects IndexWrapper objects"
       (index-wrapper? true) => false
       (index-wrapper? 17) => false
       (index-wrapper? (->IndexWrapper 17)) => true
       (index-wrapper? (->IndexWrapper -5)) => true)
-
-(fact "pos-index-wrapper? detects positive IndexWrapper objects"
-      (pos-index-wrapper? true) => false
-      (pos-index-wrapper? 17) => false
-      (pos-index-wrapper? (->IndexWrapper 17)) => true
-      (pos-index-wrapper? (->IndexWrapper -5)) => false)
-
-(fact "neg-index-wrapper? detects negative IndexWrapper objects"
-      (neg-index-wrapper? true) => false
-      (neg-index-wrapper? 17) => false
-      (neg-index-wrapper? (->IndexWrapper 17)) => false
-      (neg-index-wrapper? (->IndexWrapper -5)) => true)
 
 (fact "prepending an element to a map prepends the element to each key of the map"
       (prepend :a {'(:b :c) :d '(:f :g) :h}) => {'(:a :b :c) :d '(:a :f :g) :h})
@@ -188,21 +176,28 @@
 
 ;; Tests for sets
 
-(fact "A set is converted to paths with index wrappers with unique negative numbers in it"
-      (to-path-map #{:a}) => {[#hydra.core.IndexWrapper{:index -1}] :a}
-      (-> (to-path-map #{:a :b}) clojure.set/map-invert :a first index-wrapper?) => true
-      (-> (to-path-map #{:a :b}) clojure.set/map-invert :b first index-wrapper?) => true
-      (let [index-a (-> (to-path-map #{:a :b}) clojure.set/map-invert :a first :index)
-            index-b (-> (to-path-map #{:a :b}) clojure.set/map-invert :b first :index)]
-        index-a => (fn [x] (< x 0))
-        index-b => (fn [x] (< x 0))
-        (= index-a index-b) => false))
+(fact "A set is converted to paths with set wrappers each contianing a unique uuid"
+             (-> (to-path-map #{:a :b}) clojure.set/map-invert :a first set-wrapper?) => true
+             (-> (to-path-map #{:a :b}) clojure.set/map-invert :b first set-wrapper?) => true
+             (let [uuid-a (-> (to-path-map #{:a :b}) clojure.set/map-invert :a first :uuid)
+                   uuid-b (-> (to-path-map #{:a :b}) clojure.set/map-invert :b first :uuid)]
+               (= uuid-a uuid-b) => false))
 
 (fact "a pathmap representing a set is converted to a set by from-path-map"
       (from-path-map simple-set-map) => #{:a :b})
 
 (fact "You can do a round trip with deeply nested maps containing sets and vectors"
       (-> deeply-nested-map-with-sets-and-vectors to-path-map from-path-map) => deeply-nested-map-with-sets-and-vectors)
+
+(fact "merging two sets with non-unique members results in a set with unique members"
+      (let [a  (to-path-map #{:a :b :c})
+            b (to-path-map #{:c :d})]
+        (from-path-map (merge a b)) => #{:a :b :c :d}))
+
+(fact "merging two sets with unique members results in a set with unique members"
+      (let [a  (to-path-map #{:a :b})
+            b (to-path-map #{:c :d})]
+        (from-path-map (merge a b)) => #{:a :b :c :d}))
 
 
 (def world

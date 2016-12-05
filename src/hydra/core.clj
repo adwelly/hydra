@@ -9,11 +9,13 @@
 (defn index-wrapper? [x]
   (instance? hydra.core.IndexWrapper x))
 
-(defn pos-index-wrapper? [x]
-  (and (instance? hydra.core.IndexWrapper x) (<= 0 (:index x))))
+(defrecord SetWrapper [uuid])
 
-(defn neg-index-wrapper? [x]
-  (and (instance? hydra.core.IndexWrapper x) (> 0 (:index x))))
+(defn uuid []
+  (str (java.util.UUID/randomUUID)))
+
+(defn set-wrapper? [x]
+  (instance? hydra.core.SetWrapper x))
 
 (defn- prepend [elem mp]
   (into {} (for [[k v] mp] [(conj k elem) v])))
@@ -25,7 +27,7 @@
   (cond (map? coll) (apply merge (for [[k v] coll] (prepend k (keys-to-path-seq v))))
         (vector? coll) (apply merge (for [i (range (count coll))] (prepend (IndexWrapper. i) (keys-to-path-seq (nth coll i)))))
         (set? coll) (let [set-as-seq (seq coll)]
-                      (apply merge (for [i (range (count coll))] (prepend (IndexWrapper. (* (+ i 1) -1)) (keys-to-path-seq (nth set-as-seq i))))))
+                      (apply merge (for [i (range (count coll))] (prepend (SetWrapper. (uuid)) (keys-to-path-seq (nth set-as-seq i))))))
         :else {'() coll}))
 
 ;; To and from path map
@@ -43,8 +45,8 @@
 
 (defn- insert-sets-vectors [m-of-m]
   (let [sub-maps (into {} (for [[k v] m-of-m] [k (if (map? v) (insert-sets-vectors v) v)]))]
-    (cond (->> sub-maps keys (every? pos-index-wrapper?)) (mapv second (sort-by first (into [] sub-maps)))
-          (->> sub-maps keys (every? neg-index-wrapper?)) (set (mapv second (into [] sub-maps)))
+    (cond (->> sub-maps keys (every? index-wrapper?)) (mapv second (sort-by first (into [] sub-maps)))
+          (->> sub-maps keys (every? set-wrapper?)) (set (mapv second (into [] sub-maps)))
           :else sub-maps)))
 
 (defn from-path-map [pm]
