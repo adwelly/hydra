@@ -131,25 +131,6 @@
 (defn path-longer-than? [len path _]
   (> (count path) len))
 
-(fact "You can cleave a set of paths into two with a predicate"
-      (-> (cleave (to-path-map deeply-nested-map-with-vectors) (partial path-longer-than? 3)) first) =>
-      {["d" "f" "h" #hydra.core.IndexWrapper{:index 2}] 7
-       ["d" "f" "h" #hydra.core.IndexWrapper{:index 1}] 6
-       ["d" "f" "h" #hydra.core.IndexWrapper{:index 0}] 5}
-      (-> (cleave (to-path-map deeply-nested-map-with-vectors) (partial path-longer-than? 3) ) second) =>
-      {["a" "b"] 1
-       ["c" #hydra.core.IndexWrapper{:index 2}] "k"
-       ["c" #hydra.core.IndexWrapper{:index 0}] "i"
-       ["d" "f" "g"] 4
-       ["d" "e"] 3
-       ["c" #hydra.core.IndexWrapper{:index 1}] "j"})
-
-(fact "upsert is the inverse of cleaving"
-      (from-path-map (apply upsert (-> deeply-nested-map-with-vectors to-path-map (cleave (partial path-longer-than? 3)))))  => deeply-nested-map-with-vectors)
-
-(fact "splice is the inverse of cleaving"
-      (-> deeply-nested-map-with-vectors to-path-map (cleave (partial path-longer-than? 3)) splice from-path-map) => deeply-nested-map-with-vectors)
-
 (fact "upsert can update values, (c moves from 3 to 4)"
       (-> (upsert simple-path-map {["c"] 4}) from-path-map) => {"a" 1 "b" 2 "c" 4})
 
@@ -172,6 +153,15 @@
       (ends-with? [number? "b"] ["a" 0 "b"] 1) => true
       (ends-with? [1 "b"] ["a" 0 "b"] 7) => false
       (ends-with? [string? "b"] ["a" 0 "b"] 9) => false)
+
+(fact "kfilter returns paths that meet a predicate"
+      (-> deeply-nested-map-with-sets-and-vectors to-path-map (kfilter #(starts-with? ["d"] % nil)) from-path-map) => {"d" {"e" 3, "f" [4 :h #{5 6 7}]}})
+
+(fact "vfilter returns values that meet a predicate"
+      (-> deeply-nested-map-with-sets-and-vectors to-path-map (vfilter number?) from-path-map) =>
+      {:a {:b 1}
+       "d" {"e" 3
+            "f" [4 #{5 6 7}]}})
 
 
 ;; Tests for sets
@@ -211,20 +201,20 @@
 
 ;; Anyone with more than 100000 must give 100 to the bank....
 
-(defn accounts-with-more-than-100000? [path v]
+(defn accounts-with-more-than-100000? [[path v]]
   (and (starts-with? [:people] path v)
        (ends-with? [:money] path v)
        (<= 100000 v)))
 
 (fact "The accounts with more than 100,000 are selected by the accounts-with-more-than-100000? function"
-      (-> world to-path-map (cleave accounts-with-more-than-100000?) first from-path-map) =>
+      (-> world to-path-map (pmfilter accounts-with-more-than-100000?) from-path-map) =>
         {:people
                [{:money 129825}
                 {:money 500000000}
                 {:money 8273280}]})
 
 (fact "vmap allows a fixed amount to be removed"
-      (let [big-accounts (-> world to-path-map (cleave accounts-with-more-than-100000?) first)]
+      (let [big-accounts (-> world to-path-map (pmfilter accounts-with-more-than-100000?))]
         (from-path-map (vmap big-accounts #(- % 1000)))) =>
       {:people
        [{:money 128825}
@@ -232,7 +222,7 @@
         {:money 8272280}]})
 
 (fact "the standard count function allows the amount going to the bank to be calculated"
-      (let [big-accounts (-> world to-path-map (cleave accounts-with-more-than-100000?) first)]
+      (let [big-accounts (-> world to-path-map (pmfilter accounts-with-more-than-100000?))]
         (* 1000 (count big-accounts)) => 3000))
 
 (fact "the original bank funds is given by the standard get function:"
@@ -240,7 +230,7 @@
 
 (fact "this can now be assembled into a working example"
       (let [world-paths (to-path-map world)
-            [big-accounts _] (cleave world-paths accounts-with-more-than-100000?)
+            big-accounts (pmfilter world-paths accounts-with-more-than-100000?)
             taxed-accounts (vmap big-accounts #(- % 1000))
             total-collected (* 1000 (count big-accounts))]
         (from-path-map (upsert world-paths taxed-accounts {[:bank :funds] (+ total-collected (world-paths [:bank :funds]))}))) =>

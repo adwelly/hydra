@@ -57,17 +57,6 @@
 (defn path [v]
   {(-> v butlast vec) (last v)})
 
-(defn cleave [pm pred]
-  (loop [results '(() ()) paths (seq pm)]
-    (if (not paths)
-      (list (into {} (first results)) (into {} (second results)))
-      (let [[k v] (first paths)
-            passes (first results)
-            fails (second results)]
-        (recur (if (pred k v) (list (conj passes [k v]) fails) (list passes (conj fails [k v]))) (next paths))))))
-
-;; Some predicates for cleave
-
 (defn starts-with? [route path _]
   (when (<= (count route) (count path))
     (every? identity (map #(if (clojure.test/function? %1) (%1 %2) (= %1 %2)) route path))))
@@ -92,8 +81,16 @@
   (reduce f init (keys pm)))
 
 (defn vreduce [pm init f]
-
   (reduce f init (vals pm)))
+
+(defn pmfilter [pm pred]
+  (filter pred pm))
+
+(defn kfilter [pm pred]
+  (into {} (for [[k v] pm :when (pred k)] [k v])))
+
+(defn vfilter [pm pred]
+  (into {} (for [[k v] pm :when (pred v)] [k v])))
 
 ;; Some predicates for kreduce
 
@@ -109,4 +106,5 @@
 
 (defn append-value [pm route v]
     (assoc pm (conj route (IndexWrapper. (kreduce pm -1 (partial largest-index route)))) v))
+
 
