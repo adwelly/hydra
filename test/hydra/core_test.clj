@@ -141,28 +141,27 @@
       (vmap {[:a :b] 1 [:c :d] 2} inc) => {[:a :b] 2 [:c :d] 3})
 
 (fact "The starts-with? function identifies paths starting with a given route"
-      (starts-with? [] ["a" 0 "b"] 7) => true
-      (starts-with? ["a" 0] ["a" 0 "b"] 7) => true
-      (starts-with? ["a" number?] ["a" 0 "b"] 8) => true
-      (starts-with? ["a" 1] ["a" 0 "b"] 9) => false
-      (starts-with? ["a" string?] ["a" 0 "b"] 7) => false)
+      (starts-with? [] ["a" 0 "b"]) => true
+      (starts-with? ["a" 0] ["a" 0 "b"]) => true
+      (starts-with? ["a" number?] ["a" 0 "b"]) => true
+      (starts-with? ["a" 1] ["a" 0 "b"]) => false
+      (starts-with? ["a" string?] ["a" 0 "b"]) => false)
 
 (fact "The ends-with? function identifies paths starting with a given route"
-      (ends-with? [] ["a" 0 "b"] 3) => true
-      (ends-with? [0 "b"] ["a" 0 "b"] 2) => true
-      (ends-with? [number? "b"] ["a" 0 "b"] 1) => true
-      (ends-with? [1 "b"] ["a" 0 "b"] 7) => false
-      (ends-with? [string? "b"] ["a" 0 "b"] 9) => false)
+      (ends-with? [] ["a" 0 "b"]) => true
+      (ends-with? [0 "b"] ["a" 0 "b"]) => true
+      (ends-with? [number? "b"] ["a" 0 "b"]) => true
+      (ends-with? [1 "b"] ["a" 0 "b"]) => false
+      (ends-with? [string? "b"] ["a" 0 "b"]) => false)
 
 (fact "kfilter returns paths that meet a predicate"
-      (-> deeply-nested-map-with-sets-and-vectors to-path-map (kfilter #(starts-with? ["d"] % nil)) from-path-map) => {"d" {"e" 3, "f" [4 :h #{5 6 7}]}})
+      (-> deeply-nested-map-with-sets-and-vectors to-path-map (kfilter #(starts-with? ["d"] %)) from-path-map) => {"d" {"e" 3, "f" [4 :h #{5 6 7}]}})
 
 (fact "vfilter returns values that meet a predicate"
       (-> deeply-nested-map-with-sets-and-vectors to-path-map (vfilter number?) from-path-map) =>
       {:a {:b 1}
        "d" {"e" 3
             "f" [4 #{5 6 7}]}})
-
 
 ;; Tests for sets
 
@@ -202,8 +201,8 @@
 ;; Anyone with more than 100000 must give 100 to the bank....
 
 (defn accounts-with-more-than-100000? [[path v]]
-  (and (starts-with? [:people] path v)
-       (ends-with? [:money] path v)
+  (and (starts-with? [:people] path)
+       (ends-with? [:money] path)
        (<= 100000 v)))
 
 (fact "The accounts with more than 100,000 are selected by the accounts-with-more-than-100000? function"

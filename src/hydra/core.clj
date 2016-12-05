@@ -57,19 +57,14 @@
 (defn path [v]
   {(-> v butlast vec) (last v)})
 
-(defn starts-with? [route path _]
+(defn starts-with? [route path]
   (when (<= (count route) (count path))
     (every? identity (map #(if (clojure.test/function? %1) (%1 %2) (= %1 %2)) route path))))
 
-(defn ends-with? [route path val]
-  (starts-with? (reverse route) (reverse path) val))
-
-;; Other operators
+(defn ends-with? [route path]
+  (starts-with? (reverse route) (reverse path)))
 
 (def upsert merge)
-
-(defn splice [[pm0 pm1]]
-  (merge pm0 pm1))
 
 (defn kmap [pm f]
   (zipmap (map f (keys pm)) (vals pm)))
@@ -96,7 +91,7 @@
 
 (defn largest-index [route i path]
   (let [cr (count route)
-        index (if (and (starts-with? route path 0)
+        index (if (and (starts-with? route path)
                        (< cr (count path))
                        (index-wrapper? (nth path cr)))
                 (:index (nth path cr)) -1)]
