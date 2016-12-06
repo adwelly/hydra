@@ -200,7 +200,7 @@
 
 ;; Anyone with more than 100000 must give 100 to the bank....
 
-(defn accounts-with-more-than-100000? [[path v]]
+(defn accounts-with-more-than-100000? [path v]
   (and (starts-with? [:people] path)
        (ends-with? [:money] path)
        (<= 100000 v)))

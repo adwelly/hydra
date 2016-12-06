@@ -79,7 +79,7 @@
   (reduce f init (vals pm)))
 
 (defn pmfilter [pm pred]
-  (filter pred pm))
+  (filter (fn [[k v]] (pred k v)) pm))
 
 (defn kfilter [pm pred]
   (into {} (for [[k v] pm :when (pred k)] [k v])))
