@@ -308,6 +308,9 @@
 (fact "kreduce reduces over the vals of a path-map"
       (-> simple-map to-path-map (vreduce 0 +)) => 6)
 
+(fact "incr-when-gteq will increment an index at the end of a path if it greater than the given index"
+      (incr-when-gteq [:a :b :v #hydra.core.IndexWrapper{:index 3}] 2) => [:a :b :v #hydra.core.IndexWrapper{:index 3}])
+
 
 
 
