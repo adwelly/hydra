@@ -4,7 +4,7 @@
             [hydra.core :refer :all])
   (:import (hydra.core IndexWrapper)))
 
-(testable-privates hydra.core prepend from-path-set-to-map-of-maps insert-sets-vectors prepend-path width-at)
+(testable-privates hydra.core prepend from-path-set-to-map-of-maps insert-sets-vectors incr-when-gteq)
 
 
 (def simple-map
@@ -309,8 +309,14 @@
       (-> simple-map to-path-map (vreduce 0 +)) => 6)
 
 (fact "incr-when-gteq will increment an index at the end of a path if it greater than the given index"
-      (incr-when-gteq [:a :b :v #hydra.core.IndexWrapper{:index 3}] 2) => [:a :b :v #hydra.core.IndexWrapper{:index 3}])
+      (incr-when-gteq [:a :b :v #hydra.core.IndexWrapper{:index 3}] 2) => [:a :b :v #hydra.core.IndexWrapper{:index 4}]
+      (incr-when-gteq [:a :b :v #hydra.core.IndexWrapper{:index 3}] 3) => [:a :b :v #hydra.core.IndexWrapper{:index 4}]
+      (incr-when-gteq [:a :b :v #hydra.core.IndexWrapper{:index 3}] 4) => [:a :b :v #hydra.core.IndexWrapper{:index 3}])
 
+(fact "insert at inserts a leaf value at the given point in an array"
+      (-> simple-map-with-vector to-path-map (insert-value-at ["a"] 1 "inserted") from-path-map) =>
+        {"a" ["b" "inserted" "d" "e"]
+         "f" 2})
 
 
 

@@ -102,15 +102,15 @@
 (defn append-value [pm route v]
     (assoc pm (conj route (IndexWrapper. (kreduce pm -1 (partial largest-index route)))) v))
 
-(defn incr-when-gteq [path index]
+(defn- incr-when-gteq [path index]
   (let [iw (last path)
         original-index (get iw :index)
-        new-index (if (>= original-index index) original-index (inc original-index))]
+        new-index (if (>= original-index index)(inc original-index) original-index)]
     (conj (vec (butlast path)) (IndexWrapper. new-index))))
 
 (defn insert-value-at [pm route index v]
   (let [vector-paths (kfilter pm #(starts-with? route %))
-        updated-paths (kmap vector-paths #(incr-when-gteq index %))
+        updated-paths (kmap vector-paths #(incr-when-gteq % index))
         new-path {(conj route (IndexWrapper. index)) v}]
     (upsert pm updated-paths new-path)))
 
